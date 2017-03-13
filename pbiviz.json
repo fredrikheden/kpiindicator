@@ -1,0 +1,33 @@
+{
+  "visual": {
+    "name": "kPIIndicator",
+    "displayName": "KPI Indicator",
+    "guid": "PBI_CV_80363A80_471A_484D_B3B5_22AB68EC11A3",
+    "visualClassName": "Visual",
+    "version": "2.0.4",
+    "description": "This visualization is all about visualizing Key Performance Indicators. The status is presented as a color indication, comparing the actual and target values. Deviation is presented as distance in percent of actual from target. The history (trend) is presented as a line or a bar chart. It is up to the user to decide the granularity of the data displayed. Any dimension attributes can be used, but it’s recommended to stick to the ones in your date dimension.",
+    "supportUrl": "http://www.fredrikhedenstrom.com",
+    "gitHubUrl": ""
+  },
+  "apiVersion": "1.4.0",
+  "author": {
+    "name": "Fredrik Hedenström",
+    "email": "fredrik.hedenstrom@outlook.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "externalJS": [
+    "node_modules/jquery/dist/jquery.min.js",
+    "node_modules/d3/d3.min.js",
+    "node_modules/lodash/lodash.min.js",
+    "node_modules/globalize/lib/globalize.js",
+    "node_modules/globalize/lib/cultures/globalize.culture.en-US.js",
+    "node_modules/powerbi-visuals-utils-typeutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-svgutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-dataviewutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-formattingutils/lib/index.js"
+  ],
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json"
+}
