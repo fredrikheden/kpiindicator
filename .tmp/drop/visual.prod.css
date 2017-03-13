@@ -1,0 +1,17 @@
+.visual-PBI_CV_80363A80_471A_484D_B3B5_22AB68EC11A3_DEBUG {
+  
+}
+.visual-PBI_CV_80363A80_471A_484D_B3B5_22AB68EC11A3_DEBUG p {
+  font-size: 120px;
+  font-weight: bold;
+}
+.visual-PBI_CV_80363A80_471A_484D_B3B5_22AB68EC11A3_DEBUG p em {
+  background: yellow;
+  padding: 5px;
+}
+.visual-PBI_CV_80363A80_471A_484D_B3B5_22AB68EC11A3_DEBUG .overflowingText {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: block;
+}
