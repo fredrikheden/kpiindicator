@@ -8,8 +8,8 @@
     "email": "fredrik.hedenstrom@outlook.com"
   },
   "repository": {
-    "type": "",
-    "url": ""
+    "type": "git",
+    "url": "https://github.com/fredrikheden/kpiindicator"
   },
   "keywords": [
   "powerbi-visuals",
