@@ -26,7 +26,10 @@
     "node_modules/powerbi-visuals-utils-typeutils/lib/index.js",
     "node_modules/powerbi-visuals-utils-svgutils/lib/index.js",
     "node_modules/powerbi-visuals-utils-dataviewutils/lib/index.js",
-    "node_modules/powerbi-visuals-utils-formattingutils/lib/index.js"
+    "node_modules/powerbi-visuals-utils-formattingutils/lib/index.js",
+    "external/hashtable.js"
+
+
   ],
   "style": "style/visual.less",
   "capabilities": "capabilities.json"
