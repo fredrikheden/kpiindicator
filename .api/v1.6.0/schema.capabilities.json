@@ -1,5 +1,5 @@
 {
-    "PBI_API_VERSION": "v1.4.0",
+    "PBI_API_VERSION": "v1.6.0",
     "type": "object",
     "properties": {
         "dataRoles": {
@@ -32,6 +32,10 @@
         "supportsHighlight": {
             "type": "boolean",
             "description": "Tells the host to include highlight data"
+        },
+        "advancedEditModeSupport": {
+            "type": "number",
+            "description": "Indicates the action requested from the host when this visual enters Advanced Edit mode."
         }
     },
     "additionalProperties": false,
@@ -47,6 +51,10 @@
                 "displayName": {
                     "type": "string",
                     "description": "The name of this data role that is shown to the user"
+                },
+                "displayNameKey": {
+                    "type": "string",
+                    "description": "The localization key for the displayed name in the stringResourced file"
                 },
                 "kind": {
                     "description": "The kind of data that can be bound do this role",
@@ -69,7 +77,7 @@
                     "items": {
                         "$ref": "#/definitions/valueType"
                     }
-                }                
+                }
             },
             "required": [
                 "name",
@@ -89,7 +97,7 @@
                         "type": "object",
                         "description": "condition - Defines conditions for a data mapping (each key needs to be a valid data role)",
                         "patternProperties": {
-                            "^\\w+$": {
+                            "^[\\w\\s-]+$": {
                                 "description": "Specifies the number of values that can be assigned to this data role in this mapping",
                                 "$ref": "#/definitions/dataViewMapping.numberRangeWithKind"
                             }
@@ -482,7 +490,7 @@
                 },
                 {
                     "properties": {
-                        "kind" : {
+                        "kind": {
                             "$ref": "#/definitions/dataRole.kind"
                         }
                     }
@@ -619,13 +627,17 @@
             "type": "object",
             "description": "A list of unique property groups",
             "patternProperties": {
-                "^\\w+$": {
+                "^[\\w\\s-]+$": {
                     "type": "object",
                     "description": "Settings for a group of properties",
                     "properties": {
                         "displayName": {
                             "type": "string",
                             "description": "The name shown to the user to describe this group of properties"
+                        },
+                        "displayNameKey": {
+                            "type": "string",
+                            "description": "The localization key for the displayed name in the stringResourced file"
                         },
                         "description": {
                             "type": "string",
@@ -635,7 +647,7 @@
                             "type": "object",
                             "description": "A list of unique properties contained in this group",
                             "patternProperties": {
-                                "^\\w+$": {
+                                "^[\\w\\s-]+$": {
                                     "$ref": "#/definitions/object.propertySettings"
                                 }
                             },
@@ -654,6 +666,10 @@
                 "displayName": {
                     "type": "string",
                     "description": "The name shown to the user to describe this property"
+                },
+                "displayNameKey": {
+                    "type": "string",
+                    "description": "The localization key for the displayed name in the stringResourced file"
                 },
                 "description": {
                     "type": "string",
@@ -740,10 +756,10 @@
                 "roles": {
                     "type": "array",
                     "description": "The drillable role names for this visual",
-                     "items": {
-                         "type": "string",
-                         "description": "The name of the role"
-                     }
+                    "items": {
+                        "type": "string",
+                        "description": "The name of the role"
+                    }
                 }
             }
         },
@@ -764,6 +780,10 @@
                             "displayName": {
                                 "type": "string",
                                 "description": "The name shown to the user to describe this item"
+                            },
+                            "displayNameKey": {
+                                "type": "string",
+                                "description": "The localization key for the displayed name in the stringResourced file"
                             },
                             "value": {
                                 "type": "string",
@@ -844,19 +864,45 @@
                     "type": "boolean",
                     "description": "A numeric value that will be displayed to the user as a text input"
                 },
+                "filter": {
+                    "oneOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "selfFilter": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    ],
+                    "description": "A filter"
+                },
+                "operations": {
+                    "type": "object",
+                    "description": "A visual operation",
+                    "properties": {
+                        "searchEnabled": {
+                            "type": "boolean",
+                            "description": "Turns search ability on"
+                        }
+                    }
+                },
                 "text": {
                     "type": "boolean",
                     "description": "A text value that will be displayed to the user as a text input"
-                },		
-                "scripting": {		
-                    "type": "object",		
-                    "description": "A text value that will be displayed to the user as a script",		
-                    "properties": {		
-                        "source": {		
-                            "type": "boolean",		
-                            "description": "A source code"		
-                        }		
-                    }		
+                },
+                "scripting": {
+                    "type": "object",
+                    "description": "A text value that will be displayed to the user as a script",
+                    "properties": {
+                        "source": {
+                            "type": "boolean",
+                            "description": "A source code"
+                        }
+                    }
                 },
                 "geography": {
                     "type": "object",
@@ -939,11 +985,21 @@
                     "required": [
                         "geography"
                     ]
-                },		
-                {		
-                    "required": [		
-                        "scripting"		
-                    ]		
+                },
+                {
+                    "required": [
+                        "scripting"
+                    ]
+                },
+                {
+                    "required": [
+                        "filter"
+                    ]
+                },
+                {
+                    "required": [
+                        "operations"
+                    ]
                 }
             ]
         }

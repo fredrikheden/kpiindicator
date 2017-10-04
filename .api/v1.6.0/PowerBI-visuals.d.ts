@@ -55,6 +55,18 @@ declare module powerbi {
         Edit = 1,
         InFocusEdit = 2,
     }
+    const enum EditMode {
+        Default = 0,
+        Advanced = 1
+    }
+    const enum AdvancedEditModeSupport {
+        /** The visual doesn't support Advanced Edit mode. Do not display the 'Edit' button on this visual. */
+        NotSupported = 0,
+        /** The visual supports Advanced Edit mode, but doesn't require any further changes aside from setting EditMode=Advanced. */
+        None = 1,
+        /** The visual supports Advanced Edit mode, and requires that the host pops out the visual when entering Advanced EditMode. */
+        InFocus = 2,
+    }
     const enum ResizeMode {
         Resizing = 1,
         Resized = 2,
@@ -1171,6 +1183,7 @@ declare module powerbi.extensibility {
         hasSelection(): boolean;
         clear(): IPromise<{}>;
         getSelectionIds(): ISelectionId[];
+        applySelectionFilter(): void;
     }
 }
 
@@ -1238,7 +1251,7 @@ declare module powerbi.extensibility {
 }
 
 /**
- * Change Log Version 1.4.0
+ * Change Log Version 1.6.0
  */
 
 
@@ -1266,6 +1279,7 @@ declare module powerbi.extensibility.visual {
         persistProperties: (changes: VisualObjectInstancesToPersist) => void;
         tooltipService: ITooltipService;
         locale: string;
+		allowInteractions: () => boolean;
     }
 
     export interface VisualUpdateOptions extends extensibility.VisualUpdateOptions {
@@ -1273,6 +1287,7 @@ declare module powerbi.extensibility.visual {
         dataViews: DataView[];
         type: VisualUpdateType;
         viewMode?: ViewMode;
+        editMode?: EditMode;
     }
 
     export interface VisualConstructorOptions extends extensibility.VisualConstructorOptions {
