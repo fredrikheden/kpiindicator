@@ -1,5 +1,5 @@
 {
-    "PBI_API_VERSION": "v1.6.0",
+    "PBI_API_VERSION": "v1.12.0",
     "type": "object",
     "properties": {
         "locale": {
@@ -40,7 +40,7 @@
                 "ja-JP",
                 "kk-KZ",
                 "ko-KR",
-                "it-LT",
+                "lt-LT",
                 "lv-LV",
                 "ms-MY",
                 "nb-NO",

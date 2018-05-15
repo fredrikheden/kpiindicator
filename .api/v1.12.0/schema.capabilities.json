@@ -1,5 +1,5 @@
 {
-    "PBI_API_VERSION": "v1.6.0",
+    "PBI_API_VERSION": "v1.12.0",
     "type": "object",
     "properties": {
         "dataRoles": {
@@ -18,6 +18,9 @@
         },
         "objects": {
             "$ref": "#/definitions/objects"
+        },
+        "tooltips": {
+            "$ref": "#/definitions/tooltips"
         },
         "sorting": {
             "$ref": "#/definitions/sorting"
@@ -63,6 +66,10 @@
                 "description": {
                     "type": "string",
                     "description": "A description of this role shown to the user as a tooltip"
+                },
+                "descriptionKey": {
+                    "type": "string",
+                    "description": "The localization key for the description in the stringResourced file"
                 },
                 "preferredTypes": {
                     "type": "array",
@@ -643,6 +650,10 @@
                             "type": "string",
                             "description": "A description of this object shown to the user as a tooltip"
                         },
+                        "descriptionKey": {
+                            "type": "string",
+                            "description": "The localization key for the description in the stringResourced file"
+                        },
                         "properties": {
                             "type": "object",
                             "description": "A list of unique properties contained in this group",
@@ -658,6 +669,33 @@
                 }
             },
             "additionalProperties": false
+        },
+        "tooltips": {
+            "type": "object",
+            "description": "Instructs the host to include tooltips ability",
+            "properties": {
+                "supportedTypes": {
+                    "type": "object",
+                    "description": "Instructs the host what tooltip types to support",
+                    "properties": {
+                        "default": {
+                            "type": "boolean",
+                            "description": "Instructs the host to support showing default tooltips"
+                        },
+                        "canvas": {
+                            "type": "boolean",
+                            "description": "Instructs the host to support showing canvas tooltips"
+                        }
+                    }
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "description": "The name of the data role to bind the tooltips selected info to"
+                    }
+                }
+            }
         },
         "object.propertySettings": {
             "type": "object",
@@ -675,6 +713,10 @@
                     "type": "string",
                     "description": "A description of this property shown to the user as a tooltip"
                 },
+                "descriptionKey": {
+                    "type": "string",
+                    "description": "The localization key for the description in the stringResourced file"
+                },
                 "placeHolderText": {
                     "type": "string",
                     "description": "Text to display if the field is empty"
@@ -686,9 +728,42 @@
                 "type": {
                     "description": "Describes what type of property this is and how it should be displayed to the user",
                     "$ref": "#/definitions/valueType"
+                },
+                "rule": {
+                    "type": "object",
+                    "description": "Describes substitution rule that replaces property object, described inside the rule, to current property object that contains this rule",
+                    "$ref": "#/definitions/substitutionRule"
                 }
             },
             "additionalProperties": false
+        },
+        "substitutionRule": {
+            "type": "object",
+            "description": "Describes substitution rule that replaces property object, described inside the rule, to current property object that contains this rule",
+            "properties": {
+                "inputRole": {
+                    "type": "string",
+                    "description": "The name of role. If this role is set, the substitution will be applied"
+                },
+                "output": {
+                    "type": "object",
+                    "description": "Describes what exactly is necessary to replace",
+                    "properties": {
+                        "property": {
+                            "type": "string",
+                            "description": "The name of property object that will be replaced"
+                        },
+                        "selector": {
+                            "type": "array",
+                            "description": "The array of selector names. Usually, it contains only one selector -- 'Category'",
+                            "items": {
+                                "type": "string",
+                                "description": "The name of selector"
+                            }
+                        }
+                    }
+                }
+            }
         },
         "sorting": {
             "type": "object",
@@ -815,6 +890,92 @@
                                             }
                                         }
                                     ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "fillRule" : {
+                    "type": "object",
+                    "description": "A color gradient that will be dispalyed to the user as a minimum (,medium) and maximum color pickers",
+                    "properties": {
+                        "linearGradient2": {
+                            "type": "object",
+                            "description": "Two color gradient",
+                            "properties": {
+                                "max": {
+                                    "type": "object",
+                                    "description": "Maximum color for gradient",
+                                    "properties": {
+                                        "color": {
+                                            "type": "string"
+                                        },
+                                        "value": {
+                                            "type": "number"
+                                        }
+                                    }
+                                },
+                                "min": {
+                                    "type": "object",
+                                    "description": "Minimum color for gradient",
+                                    "properties": {
+                                        "color": {
+                                            "type": "string"
+                                        },
+                                        "value": {
+                                            "type": "number"
+                                        }
+                                    }
+                                },
+                                "nullColoringStrategy": {
+                                    "type": "object",
+                                    "description": "Null color strategy"
+                                }
+                            }
+                        },
+                        "linearGradient3": {
+                            "type": "object",
+                            "description": "Three color gradient",
+                            "properties": {
+                                "max": {
+                                    "type": "object",
+                                    "description": "Maximum color for gradient",
+                                    "properties": {
+                                        "color": {
+                                            "type": "string"
+                                        },
+                                        "value": {
+                                            "type": "number"
+                                        }
+                                    }
+                                },
+                                "min": {
+                                    "type": "object",
+                                    "description": "Minimum color for gradient",
+                                    "properties": {
+                                        "color": {
+                                            "type": "string"
+                                        },
+                                        "value": {
+                                            "type": "number"
+                                        }
+                                    }
+                                },
+                                "mid": {
+                                    "type": "object",
+                                    "description": "Middle color for gradient",
+                                    "properties": {
+                                        "color": {
+                                            "type": "string"
+                                        },
+                                        "value": {
+                                            "type": "number"
+                                        }
+                                    }
+                                },
+                                "nullColoringStrategy": {
+                                    "type": "object",
+                                    "description": "Null color strategy"
                                 }
                             }
                         }
@@ -959,6 +1120,11 @@
                 {
                     "required": [
                         "fill"
+                    ]
+                },
+                {
+                    "required": [
+                        "fillRule"
                     ]
                 },
                 {
