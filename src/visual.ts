@@ -7,6 +7,7 @@ import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
 
 
 module powerbi.extensibility.visual {
+
     interface KPIViewModel {
         dataPoints: KPIDataPoint[];
         settings: KPISettings;
@@ -249,6 +250,8 @@ module powerbi.extensibility.visual {
             }
         }
 
+
+
         // Get metadata for formatting
         let mdCol = thisRef.getMetaDataColumn(options.dataViews[0]);
         let trendMetadataCol = TrendIndex === -1 ? mdCol : options.dataViews[0].metadata.columns[TrendIndex];
@@ -367,7 +370,7 @@ module powerbi.extensibility.visual {
         private tooltipServiceWrapper: ITooltipServiceWrapper;
 
         constructor(options: VisualConstructorOptions) {
-            
+
             this.host = options.host;
             let svg = this.svg = d3.select(options.element)
                 .append('svg')
@@ -383,7 +386,6 @@ module powerbi.extensibility.visual {
             this.sLinePath = this.sMainGroupElement.append("path");
             
             this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
-            
         }
 
         public update(options: VisualUpdateOptions) {
@@ -394,6 +396,7 @@ module powerbi.extensibility.visual {
             
             let width = options.viewport.width;
             let height = options.viewport.height;
+
             
             if (this.kpiDataPoints.length === 0) {
                 this.svg.attr("visibility", "hidden");

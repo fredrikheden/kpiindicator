@@ -11,13 +11,17 @@ module powerbi.extensibility.visual {
     }
 
     export function getMetadataColumnIndex(dv: DataViewMetadata, measureOrCategoryName: string): number {
-         for (var i = 0, ilen = dv.columns.length; i < ilen; i++) {
+        var retValue = -1;
+        for (var i = 0, ilen = dv.columns.length; i < ilen; i++) {
             var column = dv.columns[i];
-            if ( column.roles.hasOwnProperty(measureOrCategoryName)) {
-                return i;
+            if(column.roles !== undefined) { // Need to do this check. If SSAS MD model kit will break otherwise...
+                if ( column.roles.hasOwnProperty(measureOrCategoryName)) {
+                    retValue = i;
+                    break;
+                }
             }
         }
-        return -1;
+        return retValue;
     }
 
     
