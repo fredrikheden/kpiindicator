@@ -125,6 +125,10 @@
                 "displayName": "Line"
               },
               {
+                "value": "LINENOMARKER",
+                "displayName": "Line no marker"
+              },
+              {
                 "value": "BAR",
                 "displayName": "Bar"
               }
@@ -154,6 +158,29 @@
         "pCustomFormat": {
           "displayName": "Custom format (e.g. >0.00 %;-0.00 %< or >#,##0;-#,##0<)",
           "type": { "text": true }
+        },
+        "pAggregationType": {
+          "displayName": "Aggregation type",
+          "type": {
+            "enumeration": [
+              {
+                "value": "LAST",
+                "displayName": "Last value"
+              },
+              {
+                "value": "AVERAGE",
+                "displayName": "Average"
+              },
+              {
+                "value": "SUM",
+                "displayName": "Sum"
+              }
+            ]
+          }
+        },
+        "pMinimumDataPointsForTrendToBeShown": {
+          "displayName": "Minimum data points for trend to be shown",
+          "type": { "numeric": true }
         }
       }
     },
