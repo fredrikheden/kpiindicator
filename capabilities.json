@@ -150,6 +150,10 @@
         "pConstantTarget": {
           "displayName": "Target heading tooltip",
           "type": { "text": true }
+        },
+        "pCustomFormat": {
+          "displayName": "Custom format (e.g. >0.00 %;-0.00 %< or >#,##0;-#,##0<)",
+          "type": { "text": true }
         }
       }
     },

@@ -58,6 +58,7 @@ module powerbi.extensibility.visual {
             displayDeviation: boolean;
             constantActual: string;
             constantTarget: string;
+            customFormat: string;
         }
         ;
     }
@@ -169,7 +170,8 @@ module powerbi.extensibility.visual {
                 fixedTarget: null,
                 displayDeviation: true,
                 constantActual: "Actual",
-                constantTarget: "Target"
+                constantTarget: "Target",
+                customFormat: ""
             }
         }; 
         let viewModel: KPIViewModel = {
@@ -220,6 +222,7 @@ module powerbi.extensibility.visual {
                 displayDeviation: getValue<boolean>(objects, 'kpi', 'pDisplayDeviation', defaultSettings.kpi.displayDeviation),
                 constantActual: getValue<string>(objects, 'kpi', 'pConstantActual', defaultSettings.kpi.constantActual),
                 constantTarget: getValue<string>(objects, 'kpi', 'pConstantTarget', defaultSettings.kpi.constantTarget),
+                customFormat: getValue<string>(objects, 'kpi', 'pCustomFormat', defaultSettings.kpi.customFormat)
             }
         }
 
@@ -256,6 +259,11 @@ module powerbi.extensibility.visual {
         let mdCol = thisRef.getMetaDataColumn(options.dataViews[0]);
         let trendMetadataCol = TrendIndex === -1 ? mdCol : options.dataViews[0].metadata.columns[TrendIndex];
 
+        var format = mdCol.format;
+        if ( kpiSettings.kpi.customFormat !== null && kpiSettings.kpi.customFormat !== undefined && kpiSettings.kpi.customFormat.length > 0) {
+            format = kpiSettings.kpi.customFormat;
+        }
+
         let kpiDataPoints: KPIDataPoint[] = [];
 
         var NoOfCategories = 1;
@@ -281,7 +289,7 @@ module powerbi.extensibility.visual {
                 CategoryName = formattedCategory;
             }
             if (actualValue !== null) {
-                var formattedActual = valueFormatter.format(actualValue, mdCol.format);
+                var formattedActual = valueFormatter.format(actualValue, format);
                 if (kpiSettings.kpi.forceThousandSeparator) {
                     formattedActual = Math.round(actualValue).toLocaleString();
                 }
@@ -290,7 +298,7 @@ module powerbi.extensibility.visual {
                 }
             }
             if (actualTrendValue !== null) {
-                var formattedTrendActual = valueFormatter.format(actualTrendValue, mdCol.format);
+                var formattedTrendActual = valueFormatter.format(actualTrendValue, format);
                 if (kpiSettings.kpi.forceThousandSeparator) {
                     formattedTrendActual = Math.round(actualTrendValue).toLocaleString();
                 }
@@ -299,7 +307,7 @@ module powerbi.extensibility.visual {
                 }
             }
             if (targetValue !== null) {
-                var formattedTarget = valueFormatter.format(targetValue, mdCol.format);
+                var formattedTarget = valueFormatter.format(targetValue, format);
                 if (kpiSettings.kpi.forceThousandSeparator) {
                     formattedTarget = Math.round(targetValue).toLocaleString();
                 }
@@ -308,7 +316,7 @@ module powerbi.extensibility.visual {
                 }
             }
             if (targetTrendValue !== null) {
-                var formattedTrendTarget = valueFormatter.format(targetTrendValue, mdCol.format);
+                var formattedTrendTarget = valueFormatter.format(targetTrendValue, format);
                 if (kpiSettings.kpi.forceThousandSeparator) {
                     formattedTrendTarget = Math.round(targetTrendValue).toLocaleString();
                 }
@@ -493,10 +501,14 @@ module powerbi.extensibility.visual {
 
             // Get metadata for formatting
             let mdCol = this.getMetaDataColumn(options.dataViews[0]);
+            var format = mdCol.format;
+            if ( this.kpiCurrentSettings.kpi.customFormat !== null && this.kpiCurrentSettings.kpi.customFormat !== undefined && this.kpiCurrentSettings.kpi.customFormat.length > 0) {
+                format = this.kpiCurrentSettings.kpi.customFormat;
+            }
 
             // Actual text
             //var formattedActualValue = formattingService.formatValue(kpiActual, mdCol.format); 
-            var formattedActualValue = valueFormatter.format(kpiActual, mdCol.format); 
+            var formattedActualValue = valueFormatter.format(kpiActual, format); 
             if (this.kpiCurrentSettings.kpi.forceThousandSeparator) {
                 formattedActualValue = Math.round(kpiActual).toLocaleString();
             }
@@ -727,7 +739,8 @@ module powerbi.extensibility.visual {
                             pFixedTarget: this.kpiCurrentSettings.kpi.fixedTarget,
                             pDisplayDeviation: this.kpiCurrentSettings.kpi.displayDeviation,
                             pConstantActual: this.kpiCurrentSettings.kpi.constantActual,
-                            pConstantTarget: this.kpiCurrentSettings.kpi.constantTarget
+                            pConstantTarget: this.kpiCurrentSettings.kpi.constantTarget,
+                            pCustomFormat: this.kpiCurrentSettings.kpi.customFormat
                         },
                         selector: null
                     });
