@@ -1,6 +1,12 @@
 {
   "dataRoles": [
     {
+      "displayName": "Counts",
+      "name": "Counts",
+      "kind": "Measure",
+      "requiredTypes" : [{"numeric":true  }]
+    },
+    {
       "displayName": "Actual value",
       "name": "Values",
       "kind": "Measure",
@@ -36,6 +42,7 @@
       "conditions": [
         {
           "Values": { "max": 1 },
+          "Counts": { "max": 1 },
           "Category": { "max": 1 },
           "Targets": { "max": 1 },
           "ValuesTrendActual": { "max": 1 },
@@ -52,6 +59,7 @@
             "by": "Series",
             "select": [
               { "bind": { "to": "Values" } },
+              { "bind": { "to": "Counts" } },
               { "bind": { "to": "Targets" } },
               { "bind": { "to": "ValuesTrendActual" } },
               { "bind": { "to": "ValuesTrendTarget" } }
@@ -147,12 +155,20 @@
           "displayName": "Display deviation",
           "type": { "bool": true }
         },
+        "pDisplayDetails": {
+          "displayName": "Display details",
+          "type": { "bool": true }
+        },
         "pConstantActual": {
           "displayName": "Actual heading tooltip",
           "type": { "text": true }
         },
         "pConstantTarget": {
           "displayName": "Target heading tooltip",
+          "type": { "text": true }
+        },
+        "pConstantCount": {
+          "displayName": "Count heading tooltip",
           "type": { "text": true }
         },
         "pCustomFormat": {
@@ -203,6 +219,10 @@
         "pKPIFontSizeDeviation": {
           "displayName": "Deviation",
           "type": { "numeric": true }
+        },
+        "pKPIFontSizeDetails": {
+          "displayName": "Details",
+          "type": { "numeric": true }
         }
       }
     },
@@ -227,10 +247,6 @@
         },
         "pKPIColorText": {
           "displayName": "Text",
-          "type": { "fill": { "solid": { "color": true } } }
-        },
-        "pKPIColorTrend": {
-          "displayName": "Trend",
           "type": { "fill": { "solid": { "color": true } } }
         }
       }

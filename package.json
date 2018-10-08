@@ -12,8 +12,8 @@
     "url": "https://github.com/fredrikheden/kpiindicator"
   },
   "keywords": [
-  "powerbi-visuals",
-  "kpi-indicator"
+    "powerbi-visuals",
+    "kpi-indicator"
   ],
   "license": "",
   "scripts": {
