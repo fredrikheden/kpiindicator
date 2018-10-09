@@ -581,7 +581,7 @@ module powerbi.extensibility.visual {
             var iSize2 = iBox2H * 0.75;
             this.sKPIActualText
                 .attr("x", sW * 0.5)
-                .attr("y", iBox1H + iBox2H * 0.8)
+                .attr("y", iBox1H + iBox2H * 0.55)
                 .attr("fill", statusColor.solid.color)
                 .attr("style", sFontFamily + "font-weight:bold;font-size:" + iSize2 + "px")
                 .attr("text-anchor", "middle")
