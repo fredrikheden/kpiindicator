@@ -68,6 +68,8 @@ module powerbi.extensibility.visual {
             customFormat: string;
             aggregationType: string;
             minimumDataPointsForTrendToBeShown: number;
+            customStartY: number;
+            customEndY: number;
         }
         ;
     }
@@ -194,7 +196,9 @@ module powerbi.extensibility.visual {
                 constantCount: "Count",
                 customFormat: "",
                 aggregationType: "LAST",
-                minimumDataPointsForTrendToBeShown: 1
+                minimumDataPointsForTrendToBeShown: 1,
+                customStartY: null,
+                customEndY: null
             }
         }; 
 
@@ -261,7 +265,9 @@ module powerbi.extensibility.visual {
                 constantCount: getValue<string>(objects, 'kpi', 'pConstantCount', defaultSettings.kpi.constantCount),
                 customFormat: getValue<string>(objects, 'kpi', 'pCustomFormat', defaultSettings.kpi.customFormat),
                 aggregationType: getValue<string>(objects, 'kpi', 'pAggregationType', defaultSettings.kpi.aggregationType),
-                minimumDataPointsForTrendToBeShown: getValue<number>(objects, 'kpi', 'pMinimumDataPointsForTrendToBeShown', defaultSettings.kpi.minimumDataPointsForTrendToBeShown)
+                minimumDataPointsForTrendToBeShown: getValue<number>(objects, 'kpi', 'pMinimumDataPointsForTrendToBeShown', defaultSettings.kpi.minimumDataPointsForTrendToBeShown),
+                customStartY: getValue<number>(objects, 'kpi', 'pCustomStartY', defaultSettings.kpi.customStartY),
+                customEndY: getValue<number>(objects, 'kpi', 'pCustomEndY', defaultSettings.kpi.customEndY)
             }
         }
 
@@ -291,7 +297,7 @@ module powerbi.extensibility.visual {
 
         thisRef.kpiTargetExists = TargetsIndex === -1 && kpiSettings.kpi.fixedTarget === null ? false : true;
         thisRef.kpiActualExists = ActualsIndex === -1 ? false : true;
-        thisRef.kpiActualExists = CountsIndex === -1 ? false : true;
+        thisRef.kpiCountExists = CountsIndex === -1 ? false : true;
         thisRef.kpiDynamicTargetExists = TargetsIndex === -1 ? false : true;
         thisRef.kpiTrendActualExists = TrendActualsIndex === -1 ? false : true;
         thisRef.kpiTrendTargetExists = TrendTargetsIndex === -1 ? false : true;
@@ -328,7 +334,7 @@ module powerbi.extensibility.visual {
                 targetValue = kpiSettings.kpi.fixedTarget;
             }
             var actualValue = ActualsIndex === -1 ? null : <number>categorical.values[ActualsIndex].values[i];
-            var countValue = CountsIndex === -1 ? 0 : <number>categorical.values[CountsIndex].values[i];
+            var countValue = CountsIndex === -1 ? null : <number>categorical.values[CountsIndex].values[i];
             var actualTrendValue = TrendActualsIndex === -1 ? actualValue : <number>categorical.values[TrendActualsIndex].values[i];
             var targetTrendValue = TrendTargetsIndex === -1 ? targetValue : <number>categorical.values[TrendTargetsIndex].values[i];
 
@@ -376,12 +382,15 @@ module powerbi.extensibility.visual {
                 }
             }
             if (countValue !== null) {
-                if (CountsIndex === -1) {
-                    toolTipArr.push({ displayName: kpiSettings.kpi.constantCount, value: countValue });
+                var formattedCount = valueFormatter.format(countValue, "0");
+                if (kpiSettings.kpi.forceThousandSeparator) {
+                    formattedCount = Math.round(countValue).toLocaleString();
+                }
+                if (CountsIndex !== -1) {
+                    toolTipArr.push({ displayName: kpiSettings.kpi.constantCount, value: formattedCount });
                 }
             }
             
-
             kpiDataPoints.push({
                 index: i,
                 actual: actualValue,
@@ -500,99 +509,14 @@ module powerbi.extensibility.visual {
             this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
         }
 
-        public update(options: VisualUpdateOptions) {
-            let viewModel: KPIViewModel = visualTransform(options, this.host, this);
-            
-            let settings = this.kpiCurrentSettings = viewModel.settings;
-            let borderSettings = this.borderCurrentSettings = viewModel.borderSettings;
-            this.kpiDataPoints = viewModel.dataPoints;
-            
-            let width = options.viewport.width;
-            let height = options.viewport.height;
-
-            
-            if (this.kpiDataPoints.length === 0) {
-                this.svg.attr("visibility", "hidden");
-                return;
-            }
-            this.svg.attr("visibility", "visible");
-
-            
-            // Limit properties
-            this.kpiCurrentSettings.kpiFonts.sizeActual = this.kpiCurrentSettings.kpiFonts.sizeActual > 500 ? 500 : this.kpiCurrentSettings.kpiFonts.sizeActual < 1 ? 1 : this.kpiCurrentSettings.kpiFonts.sizeActual;
-            this.kpiCurrentSettings.kpiFonts.sizeDeviation = this.kpiCurrentSettings.kpiFonts.sizeDeviation > 500 ? 500 : this.kpiCurrentSettings.kpiFonts.sizeDeviation < 1 ? 1 : this.kpiCurrentSettings.kpiFonts.sizeDeviation;
-            this.kpiCurrentSettings.kpiFonts.sizeHeading = this.kpiCurrentSettings.kpiFonts.sizeHeading > 500 ? 500 : this.kpiCurrentSettings.kpiFonts.sizeHeading < 1 ? 1 : this.kpiCurrentSettings.kpiFonts.sizeHeading;
-            this.kpiCurrentSettings.kpi.bandingPercentage = this.kpiCurrentSettings.kpi.bandingPercentage > 500 ? 500 : this.kpiCurrentSettings.kpi.bandingPercentage < -500 ? -500 : this.kpiCurrentSettings.kpi.bandingPercentage;
-            if (this.kpiDynamicTargetExists) {
-                this.kpiCurrentSettings.kpi.fixedTarget = null;
-            }
-
-            // Convert data points to screen 
-            var sW = width;
-            var sH = height;
-            var nW = sW * 0.9;
-            var nMax = Math.max.apply(Math, this.kpiDataPoints.map(function (o) { return o.trendActual; })); // Math.max.apply(Math, historyActualData);
-            var nMin = Math.min.apply(Math, this.kpiDataPoints.map(function (o) { return o.trendActual; })); //Math.min.apply(Math, historyActualData);
-            var nH = sH * 0.32;
-            for (var i = 0; i < this.kpiDataPoints.length; i++) {
-                let dp: KPIDataPoint = this.kpiDataPoints[i];
-                var yPos = nH * (dp.trendActual - nMin) / (nMax - nMin);
-                if (isNaN(yPos)) {
-                    yPos = 0;
-                }
-                dp.x = (i * nW / this.kpiDataPoints.length) + (nW / this.kpiDataPoints.length) * 0.5 + (sW - nW) / 2;
-                dp.y = sH - yPos - sH * 0.1 - 2;
-                dp.h = yPos + 5;
-                dp.w = (sW / this.kpiDataPoints.length) * 0.55;
-                dp.dataId = (i * nW / this.kpiDataPoints.length) + (nW / this.kpiDataPoints.length) * 0.5 + (sW - nW) / 2 + "_" + (sH - yPos - sH * 0.1 - 2); // This ID identifies the points
-            }
-            // End conversion 
-
-
-            //var kpiGoal = this.kpiDataPoints[this.kpiDataPoints.length - 1].target;
-            //var kpiActual = this.kpiDataPoints[this.kpiDataPoints.length - 1].actual;
-            var kpiGoal = this.kpiDataPoints[this.kpiDataPoints.length - 1].targetAggregated;
-            var kpiActual = this.kpiDataPoints[this.kpiDataPoints.length - 1].actualAggregated;
-            var kpiCount = this.kpiDataPoints[this.kpiDataPoints.length - 1].countAggregated;
-            var kpiText = this.kpiCurrentSettings.kpi.kpiName;
-            if (kpiText.length === 0 && this.kpiActualExists) {
-                kpiText = viewModel.categoryDimName;
-            }
-
-            this.svg.attr({
-                'height': height,
-                'width': width
-            });
-
-            var statusColor = this.kpiCurrentSettings.kpiColors.colorNone;
-            if (kpiCount > 0) {
-                statusColor = GetStatusColor(kpiActual, kpiGoal, this.kpiCurrentSettings.kpi.bandingType, this.kpiCurrentSettings.kpi.bandingCompareType, this.kpiCurrentSettings.kpi.bandingPercentage/100.0, this);
-            }
-         
-            var sL = sH;
-
-            var iBox1H = sH * 0.25;
-            var iBox2H = sH * 0.25;
-            var iBox3H = sH * 0.5;
-
-            var textColor = this.kpiCurrentSettings.kpiColors.colorText;
-
-            this.sMainRect
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", sW)
-                .attr("height", sH)
-                .attr("fill", "transparent");
-
-            var iSize = iBox1H * 0.7;
-
+        private renderTitle(titleText: string, sW: number, iBox1H: number, textColor: Fill, iSize: number) {
             this.sKPIText
-                .attr("x", sW * 0.5)
-                .attr("y", iBox1H * 0.75)
-                .attr("fill", textColor.solid.color)
-                .attr("style", sFontFamilyHeading + "font-size:" + iSize + "px")
-                .attr("text-anchor", "middle")
-                .text(kpiText);
+            .attr("x", sW * 0.5)
+            .attr("y", iBox1H * 0.75)
+            .attr("fill", textColor.solid.color)
+            .attr("style", sFontFamilyHeading + "font-size:" + iSize + "px")
+            .attr("text-anchor", "middle")
+            .text(titleText);
 
             // Fix text size
             var el = <SVGTextElement> this.sKPIText.node();
@@ -605,29 +529,17 @@ module powerbi.extensibility.visual {
                     break;
                 }
             }
+            this.sKPIText.attr("visibility", "visible");
+        }
 
-            // Get metadata for formatting
-            let mdCol = this.getMetaDataColumn(options.dataViews[0]);
-            var format = mdCol.format;
-            if ( this.kpiCurrentSettings.kpi.customFormat !== null && this.kpiCurrentSettings.kpi.customFormat !== undefined && this.kpiCurrentSettings.kpi.customFormat.length > 0) {
-                format = this.kpiCurrentSettings.kpi.customFormat;
-            }
-
-            // Actual text
-            //var formattedActualValue = formattingService.formatValue(kpiActual, mdCol.format); 
-            var formattedActualValue = valueFormatter.format(kpiActual, format); 
-            if (this.kpiCurrentSettings.kpi.forceThousandSeparator) {
-                formattedActualValue = Math.round(kpiActual).toLocaleString();
-            }
-
-            var iSize2 = iBox2H * 0.75;
+        private renderActualText(text: string, sW: number, iBox1H: number, iBox2H: number, textColor: Fill, iSize2: number) {
             this.sKPIActualText
                 .attr("x", sW * 0.5)
                 .attr("y", iBox1H + iBox2H * 0.55)
-                .attr("fill", statusColor.solid.color)
+                .attr("fill", textColor.solid.color)
                 .attr("style", sFontFamily + "font-weight:bold;font-size:" + iSize2 + "px")
                 .attr("text-anchor", "middle")
-                .text(formattedActualValue);
+                .text(text);
    
             // Fix text size
             var el = <SVGTextElement> this.sKPIActualText.node();
@@ -643,6 +555,183 @@ module powerbi.extensibility.visual {
                     break;
                 }
             }
+            this.sKPIActualText.attr("visibility", "visible");
+        }
+
+        private renderBorder(sW: number, sH: number) {
+            // Custom border
+            if (this.borderCurrentSettings.show) {
+                this.sTopCustomBorder
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", sW)
+                    .attr("height", this.borderCurrentSettings.width)
+                    .attr("fill", this.borderCurrentSettings.topColor.solid.color);
+                this.sRightCustomBorder
+                    .attr("x", sW-this.borderCurrentSettings.width)
+                    .attr("y", 0)
+                    .attr("width", this.borderCurrentSettings.width)
+                    .attr("height", sH)
+                    .attr("fill", this.borderCurrentSettings.rightColor.solid.color);
+                this.sBottomCustomBorder
+                    .attr("x", 0)
+                    .attr("y", sH-this.borderCurrentSettings.width)
+                    .attr("width", sW)
+                    .attr("height", this.borderCurrentSettings.width)
+                    .attr("fill", this.borderCurrentSettings.bottomColor.solid.color);
+                this.sLeftCustomBorder
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", this.borderCurrentSettings.width)
+                    .attr("height", sH)
+                    .attr("fill", this.borderCurrentSettings.leftColor.solid.color);
+
+                    // Show or hide each side
+                    if (this.borderCurrentSettings.type == 'A' || this.borderCurrentSettings.type == 'TO' || this.borderCurrentSettings.type == 'TB') {
+                        this.sTopCustomBorder.attr("visibility", "visible");
+                    } else {
+                        this.sTopCustomBorder.attr("visibility", "hidden");
+                    }
+                    if (this.borderCurrentSettings.type == 'A' || this.borderCurrentSettings.type == 'RO' || this.borderCurrentSettings.type == 'LR') {
+                        this.sRightCustomBorder.attr("visibility", "visible");
+                    } else {
+                        this.sRightCustomBorder.attr("visibility", "hidden");
+                    }
+                    if (this.borderCurrentSettings.type == 'A' || this.borderCurrentSettings.type == 'BO' || this.borderCurrentSettings.type == 'TB') {
+                        this.sBottomCustomBorder.attr("visibility", "visible");
+                    } else {
+                        this.sBottomCustomBorder.attr("visibility", "hidden");
+                    }
+                    if (this.borderCurrentSettings.type == 'A' || this.borderCurrentSettings.type == 'LO' || this.borderCurrentSettings.type == 'LR') {
+                        this.sLeftCustomBorder.attr("visibility", "visible");
+                    } else {
+                        this.sLeftCustomBorder.attr("visibility", "hidden");
+                    }
+            } else {
+                this.sTopCustomBorder.attr("visibility", "hidden");
+                this.sRightCustomBorder.attr("visibility", "hidden");
+                this.sBottomCustomBorder.attr("visibility", "hidden");
+                this.sLeftCustomBorder.attr("visibility", "hidden");
+            }
+        }
+
+        public update(options: VisualUpdateOptions) {
+            let viewModel: KPIViewModel = visualTransform(options, this.host, this);
+            
+            let settings = this.kpiCurrentSettings = viewModel.settings;
+            let borderSettings = this.borderCurrentSettings = viewModel.borderSettings;
+            this.kpiDataPoints = viewModel.dataPoints;
+            
+            let width = options.viewport.width;
+            let height = options.viewport.height;
+
+            var sW = width;
+            var sH = height;
+
+            var sL = sH;
+
+            var iBox1H = sH * 0.25;
+            var iBox2H = sH * 0.25;
+            var iBox3H = sH * 0.5;
+
+            var iSize = iBox1H * 0.7;
+            var iSize2 = iBox2H * 0.75;
+
+            var textColor = this.kpiCurrentSettings.kpiColors.colorText;
+
+            var kpiText = this.kpiCurrentSettings.kpi.kpiName;
+            if (kpiText.length === 0 && this.kpiActualExists) {
+                kpiText = viewModel.categoryDimName;
+            }
+            
+            if (this.kpiDataPoints.length === 0) {
+                this.svg.attr("visibility", "hidden");
+                this.renderTitle(kpiText, sW, iBox1H, textColor, iSize)
+                this.renderActualText("N/A", sW, iBox1H, iBox2H, this.kpiCurrentSettings.kpiColors.colorNone, iSize2)
+                this.renderBorder(sW, sH)
+                return;
+            }
+            this.svg.attr("visibility", "visible");
+            this.renderBorder(sW, sH)
+
+            // Limit properties
+            this.kpiCurrentSettings.kpiFonts.sizeActual = this.kpiCurrentSettings.kpiFonts.sizeActual > 500 ? 500 : this.kpiCurrentSettings.kpiFonts.sizeActual < 1 ? 1 : this.kpiCurrentSettings.kpiFonts.sizeActual;
+            this.kpiCurrentSettings.kpiFonts.sizeDeviation = this.kpiCurrentSettings.kpiFonts.sizeDeviation > 500 ? 500 : this.kpiCurrentSettings.kpiFonts.sizeDeviation < 1 ? 1 : this.kpiCurrentSettings.kpiFonts.sizeDeviation;
+            this.kpiCurrentSettings.kpiFonts.sizeHeading = this.kpiCurrentSettings.kpiFonts.sizeHeading > 500 ? 500 : this.kpiCurrentSettings.kpiFonts.sizeHeading < 1 ? 1 : this.kpiCurrentSettings.kpiFonts.sizeHeading;
+            this.kpiCurrentSettings.kpi.bandingPercentage = this.kpiCurrentSettings.kpi.bandingPercentage > 500 ? 500 : this.kpiCurrentSettings.kpi.bandingPercentage < -500 ? -500 : this.kpiCurrentSettings.kpi.bandingPercentage;
+            if (this.kpiDynamicTargetExists) {
+                this.kpiCurrentSettings.kpi.fixedTarget = null;
+            }
+
+            // Convert data points to screen 
+            var nW = sW * 0.9;
+            var nMax;
+            if (this.kpiCurrentSettings.kpi.customEndY !== null) {
+                nMax = this.kpiCurrentSettings.kpi.customEndY
+            } else {
+                nMax = Math.max.apply(Math, this.kpiDataPoints.map(function (o) { return o.trendActual; })); // Math.max.apply(Math, historyActualData);
+            }
+            var nMin;
+            if (this.kpiCurrentSettings.kpi.customStartY !== null) {
+                nMin = this.kpiCurrentSettings.kpi.customStartY
+            } else {
+                nMin = Math.min.apply(Math, this.kpiDataPoints.map(function (o) { return o.trendActual; })); //Math.min.apply(Math, historyActualData);
+            }
+            var nH = sH * 0.32;
+            for (var i = 0; i < this.kpiDataPoints.length; i++) {
+                let dp: KPIDataPoint = this.kpiDataPoints[i];
+                var yPos = nH * (dp.trendActual - nMin) / (nMax - nMin);
+                if (isNaN(yPos)) {
+                    yPos = 0;
+                }
+                dp.x = (i * nW / this.kpiDataPoints.length) + (nW / this.kpiDataPoints.length) * 0.5 + (sW - nW) / 2;
+                dp.y = sH - yPos - sH * 0.1 - 2;
+                dp.h = yPos + 5;
+                dp.w = (sW / this.kpiDataPoints.length) * 0.55;
+                dp.dataId = (i * nW / this.kpiDataPoints.length) + (nW / this.kpiDataPoints.length) * 0.5 + (sW - nW) / 2 + "_" + (sH - yPos - sH * 0.1 - 2); // This ID identifies the points
+            }
+            // End conversion
+
+            //var kpiGoal = this.kpiDataPoints[this.kpiDataPoints.length - 1].target;
+            //var kpiActual = this.kpiDataPoints[this.kpiDataPoints.length - 1].actual;
+            var kpiGoal = this.kpiDataPoints[this.kpiDataPoints.length - 1].targetAggregated;
+            var kpiActual = this.kpiDataPoints[this.kpiDataPoints.length - 1].actualAggregated;
+            var kpiCount = this.kpiDataPoints[this.kpiDataPoints.length - 1].countAggregated;
+
+            this.svg.attr({
+                'height': height,
+                'width': width
+            });
+
+            var statusColor = this.kpiCurrentSettings.kpiColors.colorNone;
+            if (this.kpiCountExists && kpiCount > 0 || (!this.kpiCountExists && this.kpiActualExists)) {
+                statusColor = GetStatusColor(kpiActual, kpiGoal, this.kpiCurrentSettings.kpi.bandingType, this.kpiCurrentSettings.kpi.bandingCompareType, this.kpiCurrentSettings.kpi.bandingPercentage/100.0, this);
+            }
+
+            this.sMainRect
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", sW)
+                .attr("height", sH)
+                .attr("fill", "transparent");
+
+            this.renderTitle(kpiText, sW, iBox1H, textColor, iSize)
+
+            // Get metadata for formatting
+            let mdCol = this.getMetaDataColumn(options.dataViews[0]);
+            var format = mdCol.format;
+            if ( this.kpiCurrentSettings.kpi.customFormat !== null && this.kpiCurrentSettings.kpi.customFormat !== undefined && this.kpiCurrentSettings.kpi.customFormat.length > 0) {
+                format = this.kpiCurrentSettings.kpi.customFormat;
+            }
+
+            // Actual text
+            //var formattedActualValue = formattingService.formatValue(kpiActual, mdCol.format); 
+            var formattedActualValue = valueFormatter.format(kpiActual, format); 
+            if (this.kpiCurrentSettings.kpi.forceThousandSeparator) {
+                formattedActualValue = Math.round(kpiActual).toLocaleString();
+            }
+
+            this.renderActualText(formattedActualValue, sW, iBox1H, iBox2H, statusColor, iSize2)
 
             var el = <SVGTextElement> this.sKPIActualText.node();
             var KPIActualTextWidth = el.getComputedTextLength();
@@ -691,7 +780,7 @@ module powerbi.extensibility.visual {
             }
 
             var detailsText = this.kpiCurrentSettings.kpi.constantTarget + ": " + valueFormatter.format(kpiGoal, format);
-            if (this.kpiTargetExists) {
+            if (this.kpiCountExists) {
                 detailsText += "; " + this.kpiCurrentSettings.kpi.constantCount + ": " + kpiCount;
             }
 
@@ -805,61 +894,6 @@ module powerbi.extensibility.visual {
                     selectionBar.attr("visibility", "hidden");
                 }
             }
-
-            // Custom border
-            if (this.borderCurrentSettings.show) {
-                this.sTopCustomBorder
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .attr("width", sW)
-                    .attr("height", this.borderCurrentSettings.width)
-                    .attr("fill", this.borderCurrentSettings.topColor.solid.color);
-                this.sRightCustomBorder
-                    .attr("x", sW-this.borderCurrentSettings.width)
-                    .attr("y", 0)
-                    .attr("width", this.borderCurrentSettings.width)
-                    .attr("height", sH)
-                    .attr("fill", this.borderCurrentSettings.rightColor.solid.color);
-                this.sBottomCustomBorder
-                    .attr("x", 0)
-                    .attr("y", sH-this.borderCurrentSettings.width)
-                    .attr("width", sW)
-                    .attr("height", this.borderCurrentSettings.width)
-                    .attr("fill", this.borderCurrentSettings.bottomColor.solid.color);
-                this.sLeftCustomBorder
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .attr("width", this.borderCurrentSettings.width)
-                    .attr("height", sH)
-                    .attr("fill", this.borderCurrentSettings.leftColor.solid.color);
-
-                    // Show or hide each side
-                    if (this.borderCurrentSettings.type == 'A' || this.borderCurrentSettings.type == 'TO' || this.borderCurrentSettings.type == 'TB') {
-                        this.sTopCustomBorder.attr("visibility", "visible");
-                    } else {
-                        this.sTopCustomBorder.attr("visibility", "hidden");
-                    }
-                    if (this.borderCurrentSettings.type == 'A' || this.borderCurrentSettings.type == 'RO' || this.borderCurrentSettings.type == 'LR') {
-                        this.sRightCustomBorder.attr("visibility", "visible");
-                    } else {
-                        this.sRightCustomBorder.attr("visibility", "hidden");
-                    }
-                    if (this.borderCurrentSettings.type == 'A' || this.borderCurrentSettings.type == 'BO' || this.borderCurrentSettings.type == 'TB') {
-                        this.sBottomCustomBorder.attr("visibility", "visible");
-                    } else {
-                        this.sBottomCustomBorder.attr("visibility", "hidden");
-                    }
-                    if (this.borderCurrentSettings.type == 'A' || this.borderCurrentSettings.type == 'LO' || this.borderCurrentSettings.type == 'LR') {
-                        this.sLeftCustomBorder.attr("visibility", "visible");
-                    } else {
-                        this.sLeftCustomBorder.attr("visibility", "hidden");
-                    }
-            } else {
-                this.sTopCustomBorder.attr("visibility", "hidden");
-                this.sRightCustomBorder.attr("visibility", "hidden");
-                this.sBottomCustomBorder.attr("visibility", "hidden");
-                this.sLeftCustomBorder.attr("visibility", "hidden");
-            }
         }
 
         public getMetaDataColumn(dataView: DataView) {
@@ -939,7 +973,9 @@ module powerbi.extensibility.visual {
                             pConstantCount: this.kpiCurrentSettings.kpi.constantCount,
                             pCustomFormat: this.kpiCurrentSettings.kpi.customFormat,
                             pAggregationType: this.kpiCurrentSettings.kpi.aggregationType,
-                            pMinimumDataPointsForTrendToBeShown: this.kpiCurrentSettings.kpi.minimumDataPointsForTrendToBeShown
+                            pMinimumDataPointsForTrendToBeShown: this.kpiCurrentSettings.kpi.minimumDataPointsForTrendToBeShown,
+                            pCustomStartY: this.kpiCurrentSettings.kpi.customStartY,
+                            pCustomEndY: this.kpiCurrentSettings.kpi.customEndY
                         },
                         selector: null
                     });

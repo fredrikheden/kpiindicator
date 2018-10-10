@@ -197,6 +197,14 @@
         "pMinimumDataPointsForTrendToBeShown": {
           "displayName": "Minimum data points for trend to be shown",
           "type": { "numeric": true }
+        },
+        "pCustomStartY": {
+          "displayName": "Starting Y-axis value",
+          "type": { "numeric": true }
+        },
+        "pCustomEndY": {
+          "displayName": "Ending Y-axis value",
+          "type": { "numeric": true }
         }
       }
     },
