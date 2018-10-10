@@ -11,6 +11,7 @@ module powerbi.extensibility.visual {
     interface KPIViewModel {
         dataPoints: KPIDataPoint[];
         settings: KPISettings;
+        borderSettings: BorderSettings;
         categoryDimName: string;
     };
 
@@ -70,6 +71,16 @@ module powerbi.extensibility.visual {
         }
         ;
     }
+
+    interface BorderSettings {
+        show: boolean;
+        topColor: Fill;
+        rightColor: Fill;
+        bottomColor: Fill;
+        leftColor: Fill;
+        type: string;
+        width: number;
+    };
 
     function GetStatusColor(dActual, dGoal, oBandingType, oBandingCompareType, dPercentBanding, thisRef:Visual) {
         var StatusColor = { RED: thisRef.kpiCurrentSettings.kpiColors.colorBad, YELLOW: thisRef.kpiCurrentSettings.kpiColors.colorNeutral, GREEN: thisRef.kpiCurrentSettings.kpiColors.colorGood };
@@ -160,11 +171,11 @@ module powerbi.extensibility.visual {
             }
             ,
             kpiColors: {
-                colorGood: { solid: { color: "#96C401" } },
+                colorGood: { solid: { color: "#7DC172" } },
                 colorNeutral: { solid: { color: "#F6C000" } },
                 colorBad: { solid: { color: "#DC0002" } },
                 colorNone: { solid: { color: "#999999" } },
-                colorText: { solid: { color: "#ffffff" } }
+                colorText: { solid: { color: "#000000" } }
             }
             ,
             kpi: {
@@ -186,9 +197,21 @@ module powerbi.extensibility.visual {
                 minimumDataPointsForTrendToBeShown: 1
             }
         }; 
+
+        let defaultBorderSettings: BorderSettings = {
+            show: false,
+            topColor: { solid: { color: "#000000" } },
+            rightColor: { solid: { color: "#000000" } },
+            bottomColor: { solid: { color: "#000000" } },
+            leftColor: { solid: { color: "#000000" } },
+            type: "A",
+            width: 1
+        }
+
         let viewModel: KPIViewModel = {
             dataPoints: [],
             settings: <KPISettings>{},
+            borderSettings: <BorderSettings>{},
             categoryDimName: ""
         };      
 
@@ -219,7 +242,7 @@ module powerbi.extensibility.visual {
                 colorNeutral: getValue<Fill>(objects, 'kpiColors', 'pKPIColorNeutral', defaultSettings.kpiColors.colorNeutral),
                 colorBad: getValue<Fill>(objects, 'kpiColors', 'pKPIColorBad', defaultSettings.kpiColors.colorBad),
                 colorNone: getValue<Fill>(objects, 'kpiColors', 'pKPIColorNone', defaultSettings.kpiColors.colorNone),
-                colorText: getValue<Fill>(objects, 'kpiColors', 'pKPIColorText', defaultSettings.kpiColors.colorText),
+                colorText: getValue<Fill>(objects, 'kpiColors', 'pKPIColorText', defaultSettings.kpiColors.colorText)
             }
             ,
             kpi: {
@@ -240,6 +263,16 @@ module powerbi.extensibility.visual {
                 aggregationType: getValue<string>(objects, 'kpi', 'pAggregationType', defaultSettings.kpi.aggregationType),
                 minimumDataPointsForTrendToBeShown: getValue<number>(objects, 'kpi', 'pMinimumDataPointsForTrendToBeShown', defaultSettings.kpi.minimumDataPointsForTrendToBeShown)
             }
+        }
+
+        let borderSettings: BorderSettings = {
+            show: getValue<boolean>(objects, 'customBorder', 'show', defaultBorderSettings.show),
+            topColor: getValue<Fill>(objects, 'customBorder', 'pColorTopBorder', defaultBorderSettings.topColor),
+            rightColor: getValue<Fill>(objects, 'customBorder', 'pColorRightBorder', defaultBorderSettings.rightColor),
+            bottomColor: getValue<Fill>(objects, 'customBorder', 'pColorBottomBorder', defaultBorderSettings.bottomColor),
+            leftColor: getValue<Fill>(objects, 'customBorder', 'pColorLeftBorder', defaultBorderSettings.leftColor),
+            type: getValue<string>(objects, 'customBorder', 'pBorderType', defaultBorderSettings.type),
+            width: getValue<number>(objects, 'customBorder', 'pBorderWidth', defaultBorderSettings.width)
         }
 
         let categorical = dataViews[0].categorical;
@@ -267,6 +300,7 @@ module powerbi.extensibility.visual {
             return {
                 dataPoints: viewModel.dataPoints,
                 settings: kpiSettings,
+                borderSettings: borderSettings,
                 categoryDimName: viewModel.categoryDimName
             }
         }
@@ -294,7 +328,7 @@ module powerbi.extensibility.visual {
                 targetValue = kpiSettings.kpi.fixedTarget;
             }
             var actualValue = ActualsIndex === -1 ? null : <number>categorical.values[ActualsIndex].values[i];
-            var countValue = CountsIndex === -1 ? null : <number>categorical.values[CountsIndex].values[i];
+            var countValue = CountsIndex === -1 ? 0 : <number>categorical.values[CountsIndex].values[i];
             var actualTrendValue = TrendActualsIndex === -1 ? actualValue : <number>categorical.values[TrendActualsIndex].values[i];
             var targetTrendValue = TrendTargetsIndex === -1 ? targetValue : <number>categorical.values[TrendTargetsIndex].values[i];
 
@@ -342,12 +376,8 @@ module powerbi.extensibility.visual {
                 }
             }
             if (countValue !== null) {
-                var formattedCount = valueFormatter.format(countValue, format);
-                if (kpiSettings.kpi.forceThousandSeparator) {
-                    formattedActual = Math.round(countValue).toLocaleString();
-                }
-                if (TrendActualsIndex === -1) {
-                    toolTipArr.push({ displayName: kpiSettings.kpi.constantCount, value: formattedCount });
+                if (CountsIndex === -1) {
+                    toolTipArr.push({ displayName: kpiSettings.kpi.constantCount, value: countValue });
                 }
             }
             
@@ -407,6 +437,7 @@ module powerbi.extensibility.visual {
         return {
             dataPoints: kpiDataPoints,
             settings: kpiSettings,
+            borderSettings: borderSettings,
             categoryDimName: categorical.values[ActualsIndex].source.displayName
         };
         
@@ -426,8 +457,14 @@ module powerbi.extensibility.visual {
         private sKPIActualDiffText: d3.Selection<SVGElement>;
         private sKPIDetailsText: d3.Selection<SVGElement>;
         private sLinePath: d3.Selection<SVGElement>;
+        private sTopCustomBorder: d3.Selection<SVGElement>;
+        private sRightCustomBorder: d3.Selection<SVGElement>;
+        private sBottomCustomBorder: d3.Selection<SVGElement>;
+        private sLeftCustomBorder: d3.Selection<SVGElement>;
 
         public kpiCurrentSettings: KPISettings;
+        public borderCurrentSettings: BorderSettings;
+
         private kpiDataPoints: KPIDataPoint[];
         
         public kpiTargetExists: boolean;
@@ -455,7 +492,11 @@ module powerbi.extensibility.visual {
             this.sKPIActualDiffText = this.sMainGroupElement.append("text");
             this.sKPIDetailsText = this.sMainGroupElement.append("text");
             this.sLinePath = this.sMainGroupElement.append("path");
-            
+            this.sTopCustomBorder = this.sMainGroupElement.append("rect");
+            this.sRightCustomBorder = this.sMainGroupElement.append("rect");
+            this.sBottomCustomBorder = this.sMainGroupElement.append("rect");
+            this.sLeftCustomBorder = this.sMainGroupElement.append("rect");
+
             this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
         }
 
@@ -463,6 +504,7 @@ module powerbi.extensibility.visual {
             let viewModel: KPIViewModel = visualTransform(options, this.host, this);
             
             let settings = this.kpiCurrentSettings = viewModel.settings;
+            let borderSettings = this.borderCurrentSettings = viewModel.borderSettings;
             this.kpiDataPoints = viewModel.dataPoints;
             
             let width = options.viewport.width;
@@ -523,7 +565,7 @@ module powerbi.extensibility.visual {
             });
 
             var statusColor = this.kpiCurrentSettings.kpiColors.colorNone;
-            if (this.kpiTargetExists) {
+            if (kpiCount > 0) {
                 statusColor = GetStatusColor(kpiActual, kpiGoal, this.kpiCurrentSettings.kpi.bandingType, this.kpiCurrentSettings.kpi.bandingCompareType, this.kpiCurrentSettings.kpi.bandingPercentage/100.0, this);
             }
          
@@ -648,9 +690,9 @@ module powerbi.extensibility.visual {
                 kpiHistoryExists = false;
             }
 
-            var detailsText = this.kpiCurrentSettings.kpi.constantTarget + ": " + kpiGoal;
+            var detailsText = this.kpiCurrentSettings.kpi.constantTarget + ": " + valueFormatter.format(kpiGoal, format);
             if (this.kpiTargetExists) {
-                detailsText += "; " + this.kpiCurrentSettings.kpi.constantCount + ": " + kpiCount
+                detailsText += "; " + this.kpiCurrentSettings.kpi.constantCount + ": " + kpiCount;
             }
 
             this.sKPIDetailsText
@@ -658,7 +700,7 @@ module powerbi.extensibility.visual {
                 .attr("x", sW * 0.5)
                 .attr("y", iBox1H + iBox2H)
                 .attr("fill", textColor.solid.color)
-                .attr("style", sFontFamily + "font-weight:bold;font-size:" + iSize2 * 0.3 + "px")
+                .attr("style", sFontFamily + "font-weight:bold;font-size:" + iSize2 * 0.4 + "px")
                 .attr("text-anchor", "start")
                 .text(detailsText);
 
@@ -763,6 +805,61 @@ module powerbi.extensibility.visual {
                     selectionBar.attr("visibility", "hidden");
                 }
             }
+
+            // Custom border
+            if (this.borderCurrentSettings.show) {
+                this.sTopCustomBorder
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", sW)
+                    .attr("height", this.borderCurrentSettings.width)
+                    .attr("fill", this.borderCurrentSettings.topColor.solid.color);
+                this.sRightCustomBorder
+                    .attr("x", sW-this.borderCurrentSettings.width)
+                    .attr("y", 0)
+                    .attr("width", this.borderCurrentSettings.width)
+                    .attr("height", sH)
+                    .attr("fill", this.borderCurrentSettings.rightColor.solid.color);
+                this.sBottomCustomBorder
+                    .attr("x", 0)
+                    .attr("y", sH-this.borderCurrentSettings.width)
+                    .attr("width", sW)
+                    .attr("height", this.borderCurrentSettings.width)
+                    .attr("fill", this.borderCurrentSettings.bottomColor.solid.color);
+                this.sLeftCustomBorder
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", this.borderCurrentSettings.width)
+                    .attr("height", sH)
+                    .attr("fill", this.borderCurrentSettings.leftColor.solid.color);
+
+                    // Show or hide each side
+                    if (this.borderCurrentSettings.type == 'A' || this.borderCurrentSettings.type == 'TO' || this.borderCurrentSettings.type == 'TB') {
+                        this.sTopCustomBorder.attr("visibility", "visible");
+                    } else {
+                        this.sTopCustomBorder.attr("visibility", "hidden");
+                    }
+                    if (this.borderCurrentSettings.type == 'A' || this.borderCurrentSettings.type == 'RO' || this.borderCurrentSettings.type == 'LR') {
+                        this.sRightCustomBorder.attr("visibility", "visible");
+                    } else {
+                        this.sRightCustomBorder.attr("visibility", "hidden");
+                    }
+                    if (this.borderCurrentSettings.type == 'A' || this.borderCurrentSettings.type == 'BO' || this.borderCurrentSettings.type == 'TB') {
+                        this.sBottomCustomBorder.attr("visibility", "visible");
+                    } else {
+                        this.sBottomCustomBorder.attr("visibility", "hidden");
+                    }
+                    if (this.borderCurrentSettings.type == 'A' || this.borderCurrentSettings.type == 'LO' || this.borderCurrentSettings.type == 'LR') {
+                        this.sLeftCustomBorder.attr("visibility", "visible");
+                    } else {
+                        this.sLeftCustomBorder.attr("visibility", "hidden");
+                    }
+            } else {
+                this.sTopCustomBorder.attr("visibility", "hidden");
+                this.sRightCustomBorder.attr("visibility", "hidden");
+                this.sBottomCustomBorder.attr("visibility", "hidden");
+                this.sLeftCustomBorder.attr("visibility", "hidden");
+            }
         }
 
         public getMetaDataColumn(dataView: DataView) {
@@ -806,6 +903,7 @@ module powerbi.extensibility.visual {
                         selector: null
                     });
                     break;
+
                 case 'kpiColors':
                     objectEnumeration.push({
                         objectName: objectName,
@@ -842,6 +940,23 @@ module powerbi.extensibility.visual {
                             pCustomFormat: this.kpiCurrentSettings.kpi.customFormat,
                             pAggregationType: this.kpiCurrentSettings.kpi.aggregationType,
                             pMinimumDataPointsForTrendToBeShown: this.kpiCurrentSettings.kpi.minimumDataPointsForTrendToBeShown
+                        },
+                        selector: null
+                    });
+                    break;
+
+                    case 'customBorder':
+                    objectEnumeration.push({
+                        objectName: objectName,
+                        displayName: "Custom Border",
+                        properties: {
+                            show: this.borderCurrentSettings.show,
+                            pColorTopBorder: this.borderCurrentSettings.topColor,
+                            pColorRightBorder: this.borderCurrentSettings.rightColor,
+                            pColorBottomBorder: this.borderCurrentSettings.bottomColor,
+                            pColorLeftBorder: this.borderCurrentSettings.leftColor,
+                            pBorderType: this.borderCurrentSettings.type,
+                            pBorderWidth: this.borderCurrentSettings.width
                         },
                         selector: null
                     });

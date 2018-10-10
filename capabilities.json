@@ -250,8 +250,71 @@
           "type": { "fill": { "solid": { "color": true } } }
         }
       }
+    },
+
+    "customBorder": {
+      "displayName": "Custom Border",
+      "properties": {
+        "show": {
+          "displayName": "Custom Border",
+          "type": { "bool": true }
+        },
+        "pColorTopBorder": {
+          "displayName": "Top Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "pColorRightBorder": {
+          "displayName": "Right Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "pColorBottomBorder": {
+          "displayName": "Bottom Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "pColorLeftBorder": {
+          "displayName": "Left Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "pBorderWidth": {
+          "displayName": "Width",
+          "type": { "numeric": true }
+        },
+        "pBorderType": {
+          "displayName": "Border type",
+          "type": {
+            "enumeration": [
+              {
+                "value": "A",
+                "displayName": "All sides"
+              },
+              {
+                "value": "LO",
+                "displayName": "Left side only"
+              },
+              {
+                "value": "RO",
+                "displayName": "Right side only"
+              },
+              {
+                "value": "TO",
+                "displayName": "Top side only"
+              },
+              {
+                "value": "BO",
+                "displayName": "Bottom side only"
+              },
+              {
+                "value": "LR",
+                "displayName": "Left and right sides"
+              },
+              {
+                "value": "TB",
+                "displayName": "Top and bottom sides"
+              }
+            ]
+          }
+        }
+      }
     }
-
   }
-
 }
