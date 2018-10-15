@@ -256,6 +256,14 @@
         "pKPIColorText": {
           "displayName": "Text",
           "type": { "fill": { "solid": { "color": true } } }
+        },
+        "pKPIColorValues": {
+          "displayName": "Values",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "pColorCoordinatedValues": {
+          "displayName": "Color Coordinated Values",
+          "type": { "bool": true }
         }
       }
     },

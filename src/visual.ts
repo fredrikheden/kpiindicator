@@ -41,6 +41,8 @@ module powerbi.extensibility.visual {
             colorBad: Fill;
             colorNone: Fill;
             colorText: Fill;
+            colorValues: Fill;
+            colorCoordinatedValues: boolean;
         }
         ,
         kpiFonts: {
@@ -177,7 +179,9 @@ module powerbi.extensibility.visual {
                 colorNeutral: { solid: { color: "#F6C000" } },
                 colorBad: { solid: { color: "#DC0002" } },
                 colorNone: { solid: { color: "#999999" } },
-                colorText: { solid: { color: "#000000" } }
+                colorText: { solid: { color: "#000000" } },
+                colorValues: { solid: { color: "#000000" } },
+                colorCoordinatedValues: false
             }
             ,
             kpi: {
@@ -246,7 +250,9 @@ module powerbi.extensibility.visual {
                 colorNeutral: getValue<Fill>(objects, 'kpiColors', 'pKPIColorNeutral', defaultSettings.kpiColors.colorNeutral),
                 colorBad: getValue<Fill>(objects, 'kpiColors', 'pKPIColorBad', defaultSettings.kpiColors.colorBad),
                 colorNone: getValue<Fill>(objects, 'kpiColors', 'pKPIColorNone', defaultSettings.kpiColors.colorNone),
-                colorText: getValue<Fill>(objects, 'kpiColors', 'pKPIColorText', defaultSettings.kpiColors.colorText)
+                colorText: getValue<Fill>(objects, 'kpiColors', 'pKPIColorText', defaultSettings.kpiColors.colorText),
+                colorValues: getValue<Fill>(objects, 'kpiColors', 'pKPIColorValues', defaultSettings.kpiColors.colorValues),
+                colorCoordinatedValues: getValue<boolean>(objects, 'kpiColors', 'pColorCoordinatedValues', defaultSettings.kpiColors.colorCoordinatedValues)
             }
             ,
             kpi: {
@@ -533,6 +539,9 @@ module powerbi.extensibility.visual {
         }
 
         private renderActualText(text: string, sW: number, iBox1H: number, iBox2H: number, textColor: Fill, iSize2: number) {
+            if (text === "(Blank)") {
+                text = "-"
+            }
             this.sKPIActualText
                 .attr("x", sW * 0.5)
                 .attr("y", iBox1H + iBox2H * 0.55)
@@ -647,7 +656,7 @@ module powerbi.extensibility.visual {
             if (this.kpiDataPoints.length === 0) {
                 this.svg.attr("visibility", "hidden");
                 this.renderTitle(kpiText, sW, iBox1H, textColor, iSize)
-                this.renderActualText("N/A", sW, iBox1H, iBox2H, this.kpiCurrentSettings.kpiColors.colorNone, iSize2)
+                this.renderActualText("-", sW, iBox1H, iBox2H, this.kpiCurrentSettings.kpiColors.colorNone, iSize2)
                 this.renderBorder(sW, sH)
                 return;
             }
@@ -789,8 +798,8 @@ module powerbi.extensibility.visual {
                 .attr("x", sW * 0.5)
                 .attr("y", iBox1H + iBox2H)
                 .attr("fill", textColor.solid.color)
-                .attr("style", sFontFamily + "font-weight:bold;font-size:" + iSize2 * 0.4 + "px")
-                .attr("text-anchor", "start")
+                .attr("style", sFontFamily + "font-size:" + iSize2 * 0.4 + "px")
+                .attr("text-anchor", "middle")
                 .text(detailsText);
 
             this.sKPIDetailsText.attr("visibility", this.kpiCurrentSettings.kpi.displayDetails ? "" : "hidden");
@@ -800,12 +809,13 @@ module powerbi.extensibility.visual {
                 this.sKPIText.attr("style", sFontFamily + "font-size:" + this.kpiCurrentSettings.kpiFonts.sizeHeading + "px");
                 this.sKPIActualText.attr("style", sFontFamily + "font-weight:bold;font-size:" + this.kpiCurrentSettings.kpiFonts.sizeActual + "px")
                 this.sKPIActualDiffText.attr("style", sFontFamily + "font-weight:bold;font-size:" + this.kpiCurrentSettings.kpiFonts.sizeDeviation + "px")
-                this.sKPIDetailsText.attr("style", sFontFamily + "font-weight:bold;font-size:" + this.kpiCurrentSettings.kpiFonts.sizeDetails + "px")
+                this.sKPIDetailsText.attr("style", sFontFamily + "font-size:" + this.kpiCurrentSettings.kpiFonts.sizeDetails + "px")
             }
 
-            var el = <SVGTextElement>this.sKPIDetailsText.node();
-            this.sKPIDetailsText.attr("x", sW * 0.5 - el.getComputedTextLength()/2)
-
+            var trendColor = this.kpiCurrentSettings.kpiColors.colorValues.solid.color
+            if (this.kpiCurrentSettings.kpiColors.colorCoordinatedValues === true) {
+                trendColor = statusColor.solid.color
+            }
             var shouldDisplayTrend = !isNaN(this.kpiCurrentSettings.kpi.minimumDataPointsForTrendToBeShown) && this.kpiDataPoints.length >= this.kpiCurrentSettings.kpi.minimumDataPointsForTrendToBeShown;
             if ( this.kpiCurrentSettings.kpi.chartType === "LINE" || this.kpiCurrentSettings.kpi.chartType === "LINENOMARKER") {
                 // Line chart
@@ -832,16 +842,16 @@ module powerbi.extensibility.visual {
                     .attr("cy", function (d) { return d.y; })
                     .attr("r", sH * 0.02)
                     .attr("id", function (d) { return d.dataId; })
-                    .attr("fill", statusColor.solid.color)
-                    .attr("stroke", statusColor.solid.color)
+                    .attr("fill", trendColor)
+                    .attr("stroke", trendColor)
                     .attr("stroke-width", sH * 0.015);
 
                 selectionCircle.exit().remove();
 
                 //Handling change to Target only, with same data
                 selectionCircle
-                    .attr("fill", statusColor.solid.color)
-                    .attr("stroke", statusColor.solid.color);
+                    .attr("fill", trendColor)
+                    .attr("stroke", trendColor);
 
                 this.sLinePath.attr("visibility", "visible");
                 this.sMainGroupElement2.selectAll("rect").remove();
@@ -855,7 +865,6 @@ module powerbi.extensibility.visual {
                     selectionCircle.attr("visibility", "");
                 }
                 
-
                 this.tooltipServiceWrapper.addTooltip(<any>selectionCircle,
                     (tooltipEvent: TooltipEventArgs<any>) => this.getTooltipData(tooltipEvent.data),
                     (tooltipEvent: TooltipEventArgs<number>) => null); 
@@ -868,17 +877,17 @@ module powerbi.extensibility.visual {
             else if ( this.kpiCurrentSettings.kpi.chartType === "BAR") {
                 // Bar chart
                 var selectionBar = this.sMainGroupElement2.selectAll("rect").data(this.kpiDataPoints, function (d) { return d.dataId; });
-
+                
                 selectionBar.enter().append("rect")
                     .attr("x", function (d) { return d.x - d.w * 0.5; })
                     .attr("y", function (d) { return d.y; })
                     .attr("width", function (d) { return d.w; })
                     .attr("height", function (d) { return d.h; })
-                    .attr("fill", statusColor.solid.color);
+                    .attr("fill", trendColor);
 
                 selectionBar.exit().remove();
 
-                selectionBar.attr("fill", statusColor.solid.color);
+                selectionBar.attr("fill", trendColor);
 
                 this.sMainGroupElement2.selectAll("circle").remove();
                 this.sLinePath.attr("visibility", "hidden");
@@ -947,7 +956,9 @@ module powerbi.extensibility.visual {
                             pKPIColorNeutral: this.kpiCurrentSettings.kpiColors.colorNeutral,
                             pKPIColorBad: this.kpiCurrentSettings.kpiColors.colorBad,
                             pKPIColorNone: this.kpiCurrentSettings.kpiColors.colorNone,
-                            pKPIColorText: this.kpiCurrentSettings.kpiColors.colorText
+                            pKPIColorText: this.kpiCurrentSettings.kpiColors.colorText,
+                            pKPIColorValues: this.kpiCurrentSettings.kpiColors.colorValues,
+                            pColorCoordinatedValues: this.kpiCurrentSettings.kpiColors.colorCoordinatedValues
                         },
                         selector: null
                     });
