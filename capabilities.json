@@ -191,6 +191,10 @@
           "displayName": "Average heading text",
           "type": { "text": true }
         },
+        "pConstantOwnerLabel": {
+          "displayName": "Owner heading text",
+          "type": { "text": true }
+        },
         "pCustomFormat": {
           "displayName": "Custom format (e.g. >0.00 %;-0.00 %< or >#,##0;-#,##0<)",
           "type": { "text": true }

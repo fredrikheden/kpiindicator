@@ -5,6 +5,14 @@ var sFontFamily: any = "font-family:'Segoe UI',wf_segoe-ui_normal,helvetica,aria
 
 import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
 
+function truncate(value)
+{
+    if (value < 0) {
+        return Math.ceil(value);
+    }
+
+    return Math.floor(value);
+}
 
 module powerbi.extensibility.visual {
 
@@ -72,6 +80,7 @@ module powerbi.extensibility.visual {
             constantCountTT: string;
             constantCountLabel: string;
             constantAverageLabel: string;
+            constantOwnerLabel: string;
             customFormat: string;
             aggregationType: string;
             minimumDataPointsForTrendToBeShown: number;
@@ -208,6 +217,7 @@ module powerbi.extensibility.visual {
                 constantCountTT: "Count",
                 constantCountLabel: "Count",
                 constantAverageLabel: "Avg",
+                constantOwnerLabel: "Owner",
                 customFormat: "",
                 aggregationType: "LAST",
                 minimumDataPointsForTrendToBeShown: 1,
@@ -284,6 +294,7 @@ module powerbi.extensibility.visual {
                 constantCountTT: getValue<string>(objects, 'kpi', 'pConstantCountTooltip', defaultSettings.kpi.constantCountTT),
                 constantCountLabel: getValue<string>(objects, 'kpi', 'pConstantCountLabel', defaultSettings.kpi.constantCountTT),
                 constantAverageLabel: getValue<string>(objects, 'kpi', 'pConstantAverageLabel', defaultSettings.kpi.constantAverageLabel),
+                constantOwnerLabel: getValue<string>(objects, 'kpi', 'pConstantOwnerLabel', defaultSettings.kpi.constantOwnerLabel),
                 customFormat: getValue<string>(objects, 'kpi', 'pCustomFormat', defaultSettings.kpi.customFormat),
                 aggregationType: getValue<string>(objects, 'kpi', 'pAggregationType', defaultSettings.kpi.aggregationType),
                 minimumDataPointsForTrendToBeShown: getValue<number>(objects, 'kpi', 'pMinimumDataPointsForTrendToBeShown', defaultSettings.kpi.minimumDataPointsForTrendToBeShown),
@@ -712,7 +723,7 @@ module powerbi.extensibility.visual {
                     yPos = 0;
                 }
                 dp.x = (i * nW / this.kpiDataPoints.length) + (nW / this.kpiDataPoints.length) * 0.5 + (sW - nW) / 2;
-                dp.y = sH - yPos - sH * 0.15 + 2*detailTextHeight;
+                dp.y = sH - yPos - sH * 0.15;
                 dp.h = yPos + 5;
                 dp.w = (sW / this.kpiDataPoints.length) * 0.55;
                 dp.dataId = (i * nW / this.kpiDataPoints.length) + (nW / this.kpiDataPoints.length) * 0.5 + (sW - nW) / 2 + "_" + (sH - yPos - sH * 0.1 - 2); // This ID identifies the points
@@ -823,21 +834,45 @@ module powerbi.extensibility.visual {
                 if (nCountWithResults > 0) {
                     nAvg /= nCountWithResults;
                 }
-                detailsText += "\n" + (this.kpiCurrentSettings.kpi.kpiOwner ? "Owner: " + this.kpiCurrentSettings.kpi.kpiOwner + "; ":"") + this.kpiCurrentSettings.kpi.constantAverageLabel + ": " + valueFormatter.format(nAvg, format);
+                detailsText += "\n" + (this.kpiCurrentSettings.kpi.kpiOwner ? this.kpiCurrentSettings.kpi.constantOwnerLabel + ": " + this.kpiCurrentSettings.kpi.kpiOwner + "; ":"") + this.kpiCurrentSettings.kpi.constantAverageLabel + ": " + valueFormatter.format(nAvg, format);
             }
 
             var detailsArr = detailsText.split('\n')
+
             this.sKPIDetailsText.selectAll("*").remove();
+            var detailLineHeights = [];
             for (var i = 0; i < detailsArr.length; ++i) {
+                var text = detailsArr[i];
+                var fontSize = detailTextHeight;
+                // If the width of the text overflows outside of the bounds of the visual, then cut it and add ...
+                while (detailsArr[i].length * fontSize * 0.5 > sW * 0.99) {
+                    fontSize--;
+                }
+                var earlierLineHeightSum = 0;
+                detailLineHeights.forEach(function (d) {
+                    earlierLineHeightSum += d;
+                });
+                detailLineHeights.push(fontSize);
                 this.sKPIDetailsText.append("tspan")
-                .text(detailsArr[i])
+                .text(text)
                 .attr("x", sW * 0.5)
-                .attr("y", iBox2H + iBox1H + i * detailTextHeight)
+                .attr("y", iBox2H + iBox1H + earlierLineHeightSum)
                 .attr("index",0)
                 .attr("fill", textColor.solid.color)
-                .attr("style", sFontFamily + "font-size:" + detailTextHeight + "px; font-weight: bold;")
+                .attr("style", sFontFamily + "font-size:" + fontSize + "px; font-weight: bold;")
                 .attr("text-anchor", "middle")
             } 
+
+            var lineHeightSum = 0;
+            detailLineHeights.forEach(function (d) {
+                lineHeightSum += d;
+            });
+
+            // Update the Y value for datapoints to shift down according to the number of newlines
+            for (var i = 0; i < this.kpiDataPoints.length; i++) {
+                let dp: KPIDataPoint = this.kpiDataPoints[i];
+                dp.y += lineHeightSum + 5;
+            }
 
             this.sKPIDetailsText.attr("visibility", this.kpiCurrentSettings.kpi.displayDetails ? "" : "hidden");
 
@@ -1020,6 +1055,7 @@ module powerbi.extensibility.visual {
                             pConstantCountTooltip: this.kpiCurrentSettings.kpi.constantCountTT,
                             pConstantCountLabel: this.kpiCurrentSettings.kpi.constantCountLabel,
                             pConstantAverageLabel: this.kpiCurrentSettings.kpi.constantAverageLabel,
+                            pConstantOwnerLabel: this.kpiCurrentSettings.kpi.constantOwnerLabel,
                             pCustomFormat: this.kpiCurrentSettings.kpi.customFormat,
                             pAggregationType: this.kpiCurrentSettings.kpi.aggregationType,
                             pMinimumDataPointsForTrendToBeShown: this.kpiCurrentSettings.kpi.minimumDataPointsForTrendToBeShown,
