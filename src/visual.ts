@@ -702,7 +702,7 @@ module powerbi.extensibility.visual {
                 nMin = Math.min.apply(Math, this.kpiDataPoints.map(function (o) { return o.trendActual; })); //Math.min.apply(Math, historyActualData);
             }
 
-            var detailtTextHeight = this.kpiCurrentSettings.kpiFonts.show ? this.kpiCurrentSettings.kpiFonts.sizeDetails : iSize2 * 0.4
+            var detailTextHeight = this.kpiCurrentSettings.kpiFonts.show ? this.kpiCurrentSettings.kpiFonts.sizeDetails : iSize2 * 0.4
 
             var nH = sH * 0.32;
             for (var i = 0; i < this.kpiDataPoints.length; i++) {
@@ -712,7 +712,7 @@ module powerbi.extensibility.visual {
                     yPos = 0;
                 }
                 dp.x = (i * nW / this.kpiDataPoints.length) + (nW / this.kpiDataPoints.length) * 0.5 + (sW - nW) / 2;
-                dp.y = sH - yPos - sH * 0.15 + 2*detailtTextHeight;
+                dp.y = sH - yPos - sH * 0.15 + 2*detailTextHeight;
                 dp.h = yPos + 5;
                 dp.w = (sW / this.kpiDataPoints.length) * 0.55;
                 dp.dataId = (i * nW / this.kpiDataPoints.length) + (nW / this.kpiDataPoints.length) * 0.5 + (sW - nW) / 2 + "_" + (sH - yPos - sH * 0.1 - 2); // This ID identifies the points
@@ -832,10 +832,10 @@ module powerbi.extensibility.visual {
                 this.sKPIDetailsText.append("tspan")
                 .text(detailsArr[i])
                 .attr("x", sW * 0.5)
-                .attr("y", iBox2H + iBox1H + i * detailtTextHeight)
+                .attr("y", iBox2H + iBox1H + i * detailTextHeight)
                 .attr("index",0)
                 .attr("fill", textColor.solid.color)
-                .attr("style", sFontFamily + "font-size:" + detailtTextHeight + "px; font-weight: bold;")
+                .attr("style", sFontFamily + "font-size:" + detailTextHeight + "px; font-weight: bold;")
                 .attr("text-anchor", "middle")
             } 
 
@@ -914,7 +914,7 @@ module powerbi.extensibility.visual {
 
                 selectionBar.enter().append("rect")
                     .attr("x", function (d) { return d.x - d.w * 0.5; })
-                    .attr("y", function (d) { return d.y - detailtTextHeight; })
+                    .attr("y", function (d) { return d.y - detailTextHeight; })
                     .attr("width", function (d) { return d.w; })
                     .attr("height", function (d) { return d.h; })
                     .attr("fill", trendColor);
