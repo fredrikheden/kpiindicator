@@ -82,6 +82,10 @@
           "displayName": "KPI name",
           "type": { "text": true }
         },
+        "pKPIOwner": {
+          "displayName": "Owner",
+          "type": { "text": true }
+        },
         "pBandingPercentage": {
           "displayName": "Banding percentage",
           "type": { "numeric": true }
@@ -155,20 +159,36 @@
           "displayName": "Display deviation",
           "type": { "bool": true }
         },
+        "pDisplayAverage": {
+          "displayName": "Display average",
+          "type": { "bool": true }
+        },
         "pDisplayDetails": {
           "displayName": "Display details",
           "type": { "bool": true }
         },
-        "pConstantActual": {
+        "pConstantActualTooltip": {
           "displayName": "Actual heading tooltip",
           "type": { "text": true }
         },
-        "pConstantTarget": {
+        "pConstantTargetTooltip": {
           "displayName": "Target heading tooltip",
           "type": { "text": true }
         },
-        "pConstantCount": {
+        "pConstantTargetLabel": {
+          "displayName": "Target heading label",
+          "type": { "text": true }
+        },
+        "pConstantCountTooltip": {
           "displayName": "Count heading tooltip",
+          "type": { "text": true }
+        },
+        "pConstantCountLabel": {
+          "displayName": "Count heading label",
+          "type": { "text": true }
+        },
+        "pConstantAverageLabel": {
+          "displayName": "Average heading text",
           "type": { "text": true }
         },
         "pCustomFormat": {

@@ -1,7 +1,7 @@
-//var sFontFamilyHeading: any = "font-family:wf_standard-font, helvetica, arial, sans-serif;"
-//var sFontFamily: any = "font-family:'Segoe UI',wf_segoe-ui_normal,helvetica,arial,sans-serif;";
-var sFontFamilyHeading: any = ""
-var sFontFamily: any = "";
+var sFontFamilyHeading: any = "font-family:wf_standard-font, helvetica, arial, sans-serif;"
+var sFontFamily: any = "font-family:'Segoe UI',wf_segoe-ui_normal,helvetica,arial,sans-serif;";
+//var sFontFamilyHeading: any = ""
+//var sFontFamily: any = "";
 
 import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
 
@@ -55,6 +55,7 @@ module powerbi.extensibility.visual {
         ,
         kpi: {
             kpiName: string;
+            kpiOwner: string;
             bandingPercentage: number;
             bandingType: string;
             bandingCompareType: string;
@@ -63,10 +64,14 @@ module powerbi.extensibility.visual {
             forceThousandSeparator: boolean;
             fixedTarget: number;
             displayDeviation: boolean;
+            displayAverage: boolean;
             displayDetails: boolean;
-            constantActual: string;
-            constantTarget: string;
-            constantCount: string;
+            constantActualTT: string;
+            constantTargetTT: string;
+            constantTargetLabel: string;
+            constantCountTT: string;
+            constantCountLabel: string;
+            constantAverageLabel: string;
             customFormat: string;
             aggregationType: string;
             minimumDataPointsForTrendToBeShown: number;
@@ -186,6 +191,7 @@ module powerbi.extensibility.visual {
             ,
             kpi: {
                 kpiName: "",
+                kpiOwner: "",
                 bandingPercentage: 5,
                 bandingType: "IIB",
                 bandingCompareType: "REL",
@@ -194,10 +200,14 @@ module powerbi.extensibility.visual {
                 forceThousandSeparator: false,
                 fixedTarget: null,
                 displayDeviation: true,
+                displayAverage: false,
                 displayDetails: true,
-                constantActual: "Actual",
-                constantTarget: "Target",
-                constantCount: "Count",
+                constantActualTT: "Actual",
+                constantTargetTT: "Target",
+                constantTargetLabel: "Target",
+                constantCountTT: "Count",
+                constantCountLabel: "Count",
+                constantAverageLabel: "Avg",
                 customFormat: "",
                 aggregationType: "LAST",
                 minimumDataPointsForTrendToBeShown: 1,
@@ -257,6 +267,7 @@ module powerbi.extensibility.visual {
             ,
             kpi: {
                 kpiName: getValue<string>(objects, 'kpi', 'pKPIName', defaultSettings.kpi.kpiName),
+                kpiOwner: getValue<string>(objects, 'kpi', 'pKPIOwner', defaultSettings.kpi.kpiOwner),
                 bandingPercentage: getValue<number>(objects, 'kpi', 'pBandingPercentage', defaultSettings.kpi.bandingPercentage),
                 bandingType: getValue<string>(objects, 'kpi', 'pBandingType', defaultSettings.kpi.bandingType),
                 bandingCompareType: getValue<string>(objects, 'kpi', 'pBandingCompareType', defaultSettings.kpi.bandingCompareType),
@@ -265,10 +276,14 @@ module powerbi.extensibility.visual {
                 forceThousandSeparator: getValue<boolean>(objects, 'kpi', 'pForceThousandSeparator', defaultSettings.kpi.forceThousandSeparator),
                 fixedTarget: getValue<number>(objects, 'kpi', 'pFixedTarget', defaultSettings.kpi.fixedTarget),
                 displayDeviation: getValue<boolean>(objects, 'kpi', 'pDisplayDeviation', defaultSettings.kpi.displayDeviation),
+                displayAverage: getValue<boolean>(objects, 'kpi', 'pDisplayAverage', defaultSettings.kpi.displayAverage),
                 displayDetails: getValue<boolean>(objects, 'kpi', 'pDisplayDetails', defaultSettings.kpi.displayDetails),
-                constantActual: getValue<string>(objects, 'kpi', 'pConstantActual', defaultSettings.kpi.constantActual),
-                constantTarget: getValue<string>(objects, 'kpi', 'pConstantTarget', defaultSettings.kpi.constantTarget),
-                constantCount: getValue<string>(objects, 'kpi', 'pConstantCount', defaultSettings.kpi.constantCount),
+                constantActualTT: getValue<string>(objects, 'kpi', 'pConstantActualTooltip', defaultSettings.kpi.constantActualTT),
+                constantTargetTT: getValue<string>(objects, 'kpi', 'pConstantTargetTooltip', defaultSettings.kpi.constantTargetTT),
+                constantTargetLabel: getValue<string>(objects, 'kpi', 'pConstantTargetLabel', defaultSettings.kpi.constantTargetLabel),
+                constantCountTT: getValue<string>(objects, 'kpi', 'pConstantCountTooltip', defaultSettings.kpi.constantCountTT),
+                constantCountLabel: getValue<string>(objects, 'kpi', 'pConstantCountLabel', defaultSettings.kpi.constantCountTT),
+                constantAverageLabel: getValue<string>(objects, 'kpi', 'pConstantAverageLabel', defaultSettings.kpi.constantAverageLabel),
                 customFormat: getValue<string>(objects, 'kpi', 'pCustomFormat', defaultSettings.kpi.customFormat),
                 aggregationType: getValue<string>(objects, 'kpi', 'pAggregationType', defaultSettings.kpi.aggregationType),
                 minimumDataPointsForTrendToBeShown: getValue<number>(objects, 'kpi', 'pMinimumDataPointsForTrendToBeShown', defaultSettings.kpi.minimumDataPointsForTrendToBeShown),
@@ -357,7 +372,7 @@ module powerbi.extensibility.visual {
                     formattedActual = Math.round(actualValue).toLocaleString();
                 }
                 if (TrendActualsIndex === -1) {
-                    toolTipArr.push({ displayName: kpiSettings.kpi.constantActual, value: formattedActual });
+                    toolTipArr.push({ displayName: kpiSettings.kpi.constantActualTT, value: formattedActual });
                 }
             }
             if (actualTrendValue !== null) {
@@ -366,7 +381,7 @@ module powerbi.extensibility.visual {
                     formattedTrendActual = Math.round(actualTrendValue).toLocaleString();
                 }
                 if (TrendActualsIndex !== -1) {
-                    toolTipArr.push({ displayName: kpiSettings.kpi.constantActual, value: formattedTrendActual });
+                    toolTipArr.push({ displayName: kpiSettings.kpi.constantActualTT, value: formattedTrendActual });
                 }
             }
             if (targetValue !== null) {
@@ -375,7 +390,7 @@ module powerbi.extensibility.visual {
                     formattedTarget = Math.round(targetValue).toLocaleString();
                 }
                 if (TrendTargetsIndex === -1) {
-                    toolTipArr.push({ displayName: kpiSettings.kpi.constantTarget, value: formattedTarget });
+                    toolTipArr.push({ displayName: kpiSettings.kpi.constantTargetTT, value: formattedTarget });
                 }
             }
             if (targetTrendValue !== null) {
@@ -384,7 +399,7 @@ module powerbi.extensibility.visual {
                     formattedTrendTarget = Math.round(targetTrendValue).toLocaleString();
                 }
                 if (TrendTargetsIndex !== -1) {
-                    toolTipArr.push({ displayName: kpiSettings.kpi.constantTarget, value: formattedTrendTarget});
+                    toolTipArr.push({ displayName: kpiSettings.kpi.constantTargetTT, value: formattedTrendTarget});
                 }
             }
             if (countValue !== null) {
@@ -393,7 +408,7 @@ module powerbi.extensibility.visual {
                     formattedCount = Math.round(countValue).toLocaleString();
                 }
                 if (CountsIndex !== -1) {
-                    toolTipArr.push({ displayName: kpiSettings.kpi.constantCount, value: formattedCount });
+                    toolTipArr.push({ displayName: kpiSettings.kpi.constantCountTT, value: formattedCount });
                 }
             }
             
@@ -626,7 +641,7 @@ module powerbi.extensibility.visual {
 
         public update(options: VisualUpdateOptions) {
             let viewModel: KPIViewModel = visualTransform(options, this.host, this);
-            
+
             let settings = this.kpiCurrentSettings = viewModel.settings;
             let borderSettings = this.borderCurrentSettings = viewModel.borderSettings;
             this.kpiDataPoints = viewModel.dataPoints;
@@ -686,6 +701,9 @@ module powerbi.extensibility.visual {
             } else {
                 nMin = Math.min.apply(Math, this.kpiDataPoints.map(function (o) { return o.trendActual; })); //Math.min.apply(Math, historyActualData);
             }
+
+            var detailtTextHeight = this.kpiCurrentSettings.kpiFonts.show ? this.kpiCurrentSettings.kpiFonts.sizeDetails : iSize2 * 0.4
+
             var nH = sH * 0.32;
             for (var i = 0; i < this.kpiDataPoints.length; i++) {
                 let dp: KPIDataPoint = this.kpiDataPoints[i];
@@ -694,7 +712,7 @@ module powerbi.extensibility.visual {
                     yPos = 0;
                 }
                 dp.x = (i * nW / this.kpiDataPoints.length) + (nW / this.kpiDataPoints.length) * 0.5 + (sW - nW) / 2;
-                dp.y = sH - yPos - sH * 0.1 - 2;
+                dp.y = sH - yPos - sH * 0.15 + 2*detailtTextHeight;
                 dp.h = yPos + 5;
                 dp.w = (sW / this.kpiDataPoints.length) * 0.55;
                 dp.dataId = (i * nW / this.kpiDataPoints.length) + (nW / this.kpiDataPoints.length) * 0.5 + (sW - nW) / 2 + "_" + (sH - yPos - sH * 0.1 - 2); // This ID identifies the points
@@ -788,34 +806,48 @@ module powerbi.extensibility.visual {
                 kpiHistoryExists = false;
             }
 
-            var detailsText = this.kpiCurrentSettings.kpi.constantTarget + ": " + valueFormatter.format(kpiGoal, format);
-            if (this.kpiCountExists) {
-                detailsText += "; " + this.kpiCurrentSettings.kpi.constantCount + ": " + kpiCount;
-            }
-
-            this.sKPIDetailsText
-            //.attr("x", sW * 0.95)
-                .attr("x", sW * 0.5)
-                .attr("y", iBox1H + iBox2H)
-                .attr("fill", textColor.solid.color)
-                .attr("style", sFontFamily + "font-size:" + iSize2 * 0.4 + "px")
-                .attr("text-anchor", "middle")
-                .text(detailsText);
-
-            this.sKPIDetailsText.attr("visibility", this.kpiCurrentSettings.kpi.displayDetails ? "" : "hidden");
-    
-            // Font size (manual)
-            if (this.kpiCurrentSettings.kpiFonts.show) {
-                this.sKPIText.attr("style", sFontFamily + "font-size:" + this.kpiCurrentSettings.kpiFonts.sizeHeading + "px");
-                this.sKPIActualText.attr("style", sFontFamily + "font-weight:bold;font-size:" + this.kpiCurrentSettings.kpiFonts.sizeActual + "px")
-                this.sKPIActualDiffText.attr("style", sFontFamily + "font-weight:bold;font-size:" + this.kpiCurrentSettings.kpiFonts.sizeDeviation + "px")
-                this.sKPIDetailsText.attr("style", sFontFamily + "font-size:" + this.kpiCurrentSettings.kpiFonts.sizeDetails + "px")
-            }
-
             var trendColor = this.kpiCurrentSettings.kpiColors.colorValues.solid.color
             if (this.kpiCurrentSettings.kpiColors.colorCoordinatedValues === true) {
                 trendColor = statusColor.solid.color
             }
+
+            var detailsText = this.kpiCurrentSettings.kpi.constantTargetLabel + ": " + valueFormatter.format(kpiGoal, format);
+            if (this.kpiCountExists) {
+                detailsText += "; " + this.kpiCurrentSettings.kpi.constantCountLabel + ": " + kpiCount;
+            }
+
+            if (this.kpiCurrentSettings.kpi.displayAverage === true) {
+                var nAvg = 0;
+                var nCountWithResults = 0;
+                this.kpiDataPoints.forEach(function (o) { nAvg += o.trendActual; if (o.count > 0) {nCountWithResults++;} })
+                if (nCountWithResults > 0) {
+                    nAvg /= nCountWithResults;
+                }
+                detailsText += "\n" + (this.kpiCurrentSettings.kpi.kpiOwner ? "Owner: " + this.kpiCurrentSettings.kpi.kpiOwner + "; ":"") + this.kpiCurrentSettings.kpi.constantAverageLabel + ": " + valueFormatter.format(nAvg, format);
+            }
+
+            var detailsArr = detailsText.split('\n')
+            this.sKPIDetailsText.selectAll("*").remove();
+            for (var i = 0; i < detailsArr.length; ++i) {
+                this.sKPIDetailsText.append("tspan")
+                .text(detailsArr[i])
+                .attr("x", sW * 0.5)
+                .attr("y", iBox2H + iBox1H + i * detailtTextHeight)
+                .attr("index",0)
+                .attr("fill", textColor.solid.color)
+                .attr("style", sFontFamily + "font-size:" + detailtTextHeight + "px; font-weight: bold;")
+                .attr("text-anchor", "middle")
+            } 
+
+            this.sKPIDetailsText.attr("visibility", this.kpiCurrentSettings.kpi.displayDetails ? "" : "hidden");
+
+            // Font size (manual)
+            if (this.kpiCurrentSettings.kpiFonts.show) {
+                this.sKPIText.attr("style", sFontFamily + "font-weight:bold;font-size:" + this.kpiCurrentSettings.kpiFonts.sizeHeading + "px");
+                this.sKPIActualText.attr("style", sFontFamily + "font-weight:bold;font-size:" + this.kpiCurrentSettings.kpiFonts.sizeActual + "px")
+                this.sKPIActualDiffText.attr("style", sFontFamily + "font-weight:bold;font-size:" + this.kpiCurrentSettings.kpiFonts.sizeDeviation + "px")
+            }
+            
             var shouldDisplayTrend = !isNaN(this.kpiCurrentSettings.kpi.minimumDataPointsForTrendToBeShown) && this.kpiDataPoints.length >= this.kpiCurrentSettings.kpi.minimumDataPointsForTrendToBeShown;
             if ( this.kpiCurrentSettings.kpi.chartType === "LINE" || this.kpiCurrentSettings.kpi.chartType === "LINENOMARKER") {
                 // Line chart
@@ -832,6 +864,7 @@ module powerbi.extensibility.visual {
 
                 this.sLinePath.attr("d", lineFunction(<any>this.kpiDataPoints));
 
+                this.sMainGroupElement2.selectAll("circle").remove()
                 var selectionCircle = this.sMainGroupElement2.selectAll("circle").data(this.kpiDataPoints, function (d) { return d.dataId; });
 
                 //Handling new data
@@ -840,7 +873,7 @@ module powerbi.extensibility.visual {
                     .classed(".circle112", true)
                     .attr("cx", function (d) { return d.x; })
                     .attr("cy", function (d) { return d.y; })
-                    .attr("r", sH * 0.02)
+                    .attr("r", sH * 0.02 - 5)
                     .attr("id", function (d) { return d.dataId; })
                     .attr("fill", trendColor)
                     .attr("stroke", trendColor)
@@ -876,11 +909,12 @@ module powerbi.extensibility.visual {
             }
             else if ( this.kpiCurrentSettings.kpi.chartType === "BAR") {
                 // Bar chart
+                this.sMainGroupElement2.selectAll("rect").remove()
                 var selectionBar = this.sMainGroupElement2.selectAll("rect").data(this.kpiDataPoints, function (d) { return d.dataId; });
-                
+
                 selectionBar.enter().append("rect")
                     .attr("x", function (d) { return d.x - d.w * 0.5; })
-                    .attr("y", function (d) { return d.y; })
+                    .attr("y", function (d) { return d.y - detailtTextHeight; })
                     .attr("width", function (d) { return d.w; })
                     .attr("height", function (d) { return d.h; })
                     .attr("fill", trendColor);
@@ -921,7 +955,6 @@ module powerbi.extensibility.visual {
             return retValue;
         }
 
-        
         // Right settings panel
         public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstanceEnumeration {
             let objectName = options.objectName;
@@ -970,6 +1003,7 @@ module powerbi.extensibility.visual {
                         displayName: "KPI",
                         properties: {
                             pKPIName: this.kpiCurrentSettings.kpi.kpiName,
+                            pKPIOwner: this.kpiCurrentSettings.kpi.kpiOwner,
                             pChartType: this.kpiCurrentSettings.kpi.chartType,
                             pBandingPercentage: this.kpiCurrentSettings.kpi.bandingPercentage,
                             pBandingType: this.kpiCurrentSettings.kpi.bandingType,
@@ -978,10 +1012,14 @@ module powerbi.extensibility.visual {
                             pForceThousandSeparator : this.kpiCurrentSettings.kpi.forceThousandSeparator,
                             pFixedTarget: this.kpiCurrentSettings.kpi.fixedTarget,
                             pDisplayDeviation: this.kpiCurrentSettings.kpi.displayDeviation,
+                            pDisplayAverage: this.kpiCurrentSettings.kpi.displayAverage,
                             pDisplayDetails: this.kpiCurrentSettings.kpi.displayDetails,
-                            pConstantActual: this.kpiCurrentSettings.kpi.constantActual,
-                            pConstantTarget: this.kpiCurrentSettings.kpi.constantTarget,
-                            pConstantCount: this.kpiCurrentSettings.kpi.constantCount,
+                            pConstantActualTooltip: this.kpiCurrentSettings.kpi.constantActualTT,
+                            pConstantTargetTooltip: this.kpiCurrentSettings.kpi.constantTargetTT,
+                            pConstantTargetLabel: this.kpiCurrentSettings.kpi.constantTargetLabel,
+                            pConstantCountTooltip: this.kpiCurrentSettings.kpi.constantCountTT,
+                            pConstantCountLabel: this.kpiCurrentSettings.kpi.constantCountLabel,
+                            pConstantAverageLabel: this.kpiCurrentSettings.kpi.constantAverageLabel,
                             pCustomFormat: this.kpiCurrentSettings.kpi.customFormat,
                             pAggregationType: this.kpiCurrentSettings.kpi.aggregationType,
                             pMinimumDataPointsForTrendToBeShown: this.kpiCurrentSettings.kpi.minimumDataPointsForTrendToBeShown,
