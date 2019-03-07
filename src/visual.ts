@@ -723,7 +723,7 @@ module powerbi.extensibility.visual {
                     var column = dataView.metadata.columns[i];
                     if (column.isMeasure) {
                         retValue = column;
-                        if ((<any>column.roles).Values === true) {
+                        if (column.roles && (<any>column.roles).Values === true) {
                             break;
                         }
                     }
