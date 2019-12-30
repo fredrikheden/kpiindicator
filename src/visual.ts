@@ -741,11 +741,6 @@ module powerbi.extensibility.visual {
                 'width': width
             });
 
-            var statusColor = this.kpiCurrentSettings.kpiColors.colorNone;
-            if (this.kpiCountExists && kpiCount > 0 || (!this.kpiCountExists && this.kpiActualExists)) {
-                statusColor = GetStatusColor(kpiActual, kpiGoal, this.kpiCurrentSettings.kpi.bandingType, this.kpiCurrentSettings.kpi.bandingCompareType, this.kpiCurrentSettings.kpi.bandingPercentage/100.0, this);
-            }
-
             this.sMainRect
                 .attr("x", 0)
                 .attr("y", 0)
@@ -765,6 +760,12 @@ module powerbi.extensibility.visual {
             // Actual text
             //var formattedActualValue = formattingService.formatValue(kpiActual, mdCol.format); 
             var formattedActualValue = valueFormatter.format(kpiActual, format); 
+
+            var statusColor = this.kpiCurrentSettings.kpiColors.colorNone;
+            if (this.kpiCountExists && kpiCount > 0 || (!this.kpiCountExists && this.kpiActualExists)) {
+                statusColor = GetStatusColor(formattedActualValue, kpiGoal, this.kpiCurrentSettings.kpi.bandingType, this.kpiCurrentSettings.kpi.bandingCompareType, this.kpiCurrentSettings.kpi.bandingPercentage/100.0, this);
+            }
+
             if (this.kpiCurrentSettings.kpi.forceThousandSeparator) {
                 formattedActualValue = Math.round(kpiActual).toLocaleString();
             }
